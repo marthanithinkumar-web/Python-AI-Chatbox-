@@ -1,5 +1,5 @@
 @echo off
 cd /d "%~dp0"
-python gui.py
-if errorlevel 1 py gui.py
+python CampusBot.py
+if errorlevel 1 py CampusBot.py
 if errorlevel 1 pause
