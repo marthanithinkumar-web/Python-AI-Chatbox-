@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+chat_history.csv
+.venv/
+venv/
+.DS_Store
