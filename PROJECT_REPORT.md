@@ -47,7 +47,7 @@ A small chatbot can demonstrate how user text is converted into categories and r
 **Software:** Python 3.10+, text editor or IDE, terminal, GitHub.  
 **Libraries:** json, os, re, urllib, csv, pathlib, datetime, unittest.  
 **Hardware:** Computer capable of running Python.  
-**Connectivity:** Not required at runtime.
+**Connectivity:** Required for live Gemini mode; limited offline commands work without it.
 
 ## 5. System design
 1. User enters a message.
@@ -99,10 +99,10 @@ Run **python -m unittest -v**.
 **Verified automated test result:** PASS — 10 tests ran successfully with 0 failures and 0 errors on GitHub Actions using Python 3.11.17 on 2026-10-23. See TEST_RESULTS.md for the run link. Repeat the tests on the computer used for the college demonstration.
 
 ## 10. Results and discussion
-The intended outcome is an interactive console chatbot that categorizes a small set of college questions, returns predefined guidance, and saves local history. The system is explainable because its keywords are explicit. Accuracy is limited by the keyword list, ambiguity, spelling variation, and lack of a trained language model. Confirm tests on the computer used for evaluation.
+The outcome is an interactive console chatbot that uses a generative AI model for open-ended questions, includes recent conversation context, handles common API failures, and saves local history. The revised instructions improve structure and question interpretation but cannot guarantee every answer is correct. Verify important facts and run a live test with a valid Gemini API key.
 
 ## 11. Conclusion
-CampusBot combines a live generative AI API, conversational context, Python modules, CSV persistence, secret handling, API error management, and automated tests. It is appropriate for a lab demonstration, but requires a valid Gemini API key for generative answers and is not an authoritative source for changing college policies or personal records.
+CampusBot combines a live generative AI API, conversational context, improved answer-quality instructions, Python modules, CSV persistence, secret handling, API error management, and automated tests. It requires a valid Gemini API key and internet access for flexible answers. It is not an authoritative source for changing college policies or personal records.
 
 ## 12. Future scope
 A graphical interface, streaming responses, configurable model selection, retrieval from verified documents, and explicit citations could improve usability.
