@@ -7,6 +7,7 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 import nlp_engine
 import storage
+from gui import respond_to_message
 from main import count_words, get_non_empty_input
 
 
@@ -79,6 +80,25 @@ class AppTests(unittest.TestCase):
                 self.assertEqual(len(rows), 1)
                 self.assertEqual(rows[0]["user"], "hello, bot")
                 self.assertEqual(rows[0]["bot"], "Hi! Welcome.")
+
+    def test_gui_response_preserves_context_and_persists(self):
+        prior = [{"role": "user", "content": "What is Python?"}, {"role": "model", "content": "A programming language."}]
+        generator = MagicMock(return_value="It is popular for scripting.")
+        with patch("gui.append_chat") as save:
+            reply, updated = respond_to_message("Why is it popular?", prior, generator)
+        self.assertEqual(reply, "It is popular for scripting.")
+        generator.assert_called_once_with("Why is it popular?", history=prior)
+        save.assert_called_once_with("Why is it popular?", reply)
+        self.assertEqual(updated[-2:], [
+            {"role": "user", "content": "Why is it popular?"},
+            {"role": "model", "content": reply},
+        ])
+
+    def test_gui_context_is_limited_to_recent_turns(self):
+        history = [{"role": "user", "content": f"question {i}"} for i in range(10)]
+        with patch("gui.append_chat"):
+            _, updated = respond_to_message("new question", history, lambda message, history: "answer")
+        self.assertLessEqual(len(updated), 12)
 
 
 if __name__ == "__main__":
