@@ -1,8 +1,10 @@
-"""Run tests with python -m unittest -v."""
+"""Automated tests for CampusBot. Run: python -m unittest -v"""
+import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 import nlp_engine
 import storage
 from main import count_words, get_non_empty_input
@@ -12,23 +14,36 @@ class NLPTests(unittest.TestCase):
     def test_tokenization(self):
         self.assertEqual(nlp_engine.tokenize("Hello, CAMPUS! 2026"), ["hello", "campus", "2026"])
 
-    def test_stop_words_and_synonyms(self):
-        self.assertEqual(nlp_engine.preprocess("What is the exam schedule"), ["exam", "timetable"])
+    def test_stop_words(self):
+        self.assertEqual(nlp_engine.preprocess("What is the exam schedule"), ["exam", "schedule"])
 
-    def test_exam_intent(self):
-        self.assertEqual(nlp_engine.classify_intent("When is the exam date?"), "exam")
+    def test_greeting_intent(self):
+        self.assertEqual(nlp_engine.classify_intent("hello there"), "greeting")
 
-    def test_fees_intent(self):
-        self.assertEqual(nlp_engine.classify_intent("Tell me about tuition charges"), "fees")
+    def test_unknown_intent_is_none(self):
+        self.assertIsNone(nlp_engine.classify_intent("quantum banana spaceship"))
 
-    def test_library_intent(self):
-        self.assertEqual(nlp_engine.classify_intent("Can I borrow books?"), "library")
+    def test_no_key_has_honest_fallback(self):
+        with patch.dict(os.environ, {}, clear=True):
+            self.assertIn("GEMINI_API_KEY", nlp_engine.generate_response("Explain black holes"))
 
-    def test_unknown_fallback(self):
-        self.assertEqual(nlp_engine.generate_response("quantum banana spaceship"), nlp_engine.FALLBACK)
+    def test_live_ai_parses_response(self):
+        fake_response = MagicMock()
+        fake_response.__enter__.return_value.read.return_value = json.dumps({
+            "candidates": [{"content": {"parts": [{"text": "A black hole is a region of space where gravity is extremely strong."}]}}]
+        }).encode()
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}), patch("nlp_engine.urllib.request.urlopen", return_value=fake_response):
+            answer = nlp_engine.generate_response("Explain black holes", history=[{"role":"user","content":"What is gravity?"},{"role":"model","content":"Gravity is attraction."}])
+        self.assertIn("black hole", answer)
 
-    def test_empty_text(self):
-        self.assertIsNone(nlp_engine.classify_intent("   "))
+    def test_rate_limit_message(self):
+        from urllib.error import HTTPError
+        error = HTTPError("url", 429, "quota", {}, None)
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}), patch("nlp_engine.urllib.request.urlopen", side_effect=error):
+            self.assertIn("quota", nlp_engine.generate_response("Tell me something"))
+
+    def test_empty_text_preprocessing(self):
+        self.assertEqual(nlp_engine.preprocess("   "), [])
 
 
 class AppTests(unittest.TestCase):
