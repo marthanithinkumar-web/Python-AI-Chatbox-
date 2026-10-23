@@ -43,7 +43,7 @@ Optional: set `GEMINI_MODEL` to a model enabled for your API key. Default is `ge
 - Type `clear` to clear conversation context, `history` to view local saved turns, and `exit` to quit.
 
 ## 4. How it works
-The program sends the user message and up to 12 recent user/assistant messages to Gemini. The provider generates the response. The Python project keeps only the recent context in memory for the current session; local CSV history is for review and is not automatically sent to the AI. A system instruction encourages helpful responses and discourages invented current facts.
+The program sends the user message and up to 12 recent user/assistant messages to Gemini. The improved system instruction tells the model to identify the actual task, account for context and constraints, answer every part, clarify important ambiguity, explain complex answers with examples or steps, check code/calculations, and be honest about uncertainty. The generation settings use a lower temperature for more consistent answers and allow longer responses. The Python project keeps recent context in memory for the current session; local CSV history is for review and is not automatically sent to the AI.
 
 ## 5. Security and limitations
 - Your API key is sent to Google's Gemini API over HTTPS and must be protected.
@@ -61,3 +61,15 @@ The program sends the user message and up to 12 recent user/assistant messages t
 - `PROJECT_REPORT.md` — report draft
 - `PROJECT_OUTCOMES.md` — learning outcomes
 - `TEST_RESULTS.md` — CI test results
+
+
+## 6. Improving answer quality and troubleshooting
+
+**Important:** Detailed, open-ended answers require live AI mode. If the startup banner says **Limited offline mode**, the app is not using Gemini and cannot intelligently answer arbitrary questions. Configure a valid `GEMINI_API_KEY`, close the terminal, open a new PowerShell window, and start CampusBot again.
+
+For better answers:
+- Ask the full question and include the relevant context, constraints, and desired level of detail.
+- Use follow-up questions naturally; the current session passes recent turns as context.
+- If the answer misunderstood you, say what it misunderstood and ask it to correct the answer.
+- Verify important facts, code, and calculations. A generative model can still make mistakes.
+- If the AI says the key, model, or quota is unavailable, follow the error message and check Google AI Studio. Do not put the API key in GitHub.
