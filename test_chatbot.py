@@ -32,15 +32,30 @@ class NLPTests(unittest.TestCase):
         fake_response.__enter__.return_value.read.return_value = json.dumps({
             "candidates": [{"content": {"parts": [{"text": "A black hole is a region of space where gravity is extremely strong."}]}}]
         }).encode()
-        with patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}), patch("nlp_engine.urllib.request.urlopen", return_value=fake_response):
-            answer = nlp_engine.generate_response("Explain black holes", history=[{"role":"user","content":"What is gravity?"},{"role":"model","content":"Gravity is attraction."}])
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}), patch("nlp_engine.urllib.request.urlopen", return_value=fake_response) as mocked:
+            answer = nlp_engine.generate_response(
+                "Explain black holes",
+                history=[{"role": "user", "content": "What is gravity?"}, {"role": "model", "content": "Gravity is attraction."}]
+            )
         self.assertIn("black hole", answer)
+        request = mocked.call_args.args[0]
+        payload = json.loads(request.data.decode("utf-8"))
+        self.assertIn("understand the meaning", payload["system_instruction"]["parts"][0]["text"])
+        self.assertEqual(len(payload["contents"]), 3)
+        self.assertEqual(payload["generationConfig"]["temperature"], 0.35)
+        self.assertEqual(payload["generationConfig"]["maxOutputTokens"], 4096)
 
     def test_rate_limit_message(self):
         from urllib.error import HTTPError
         error = HTTPError("url", 429, "quota", {}, None)
         with patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}), patch("nlp_engine.urllib.request.urlopen", side_effect=error):
             self.assertIn("quota", nlp_engine.generate_response("Tell me something"))
+
+    def test_missing_model_message(self):
+        from urllib.error import HTTPError
+        error = HTTPError("url", 404, "missing", {}, None)
+        with patch.dict(os.environ, {"GEMINI_API_KEY": "test-key"}), patch("nlp_engine.urllib.request.urlopen", side_effect=error):
+            self.assertIn("GEMINI_MODEL", nlp_engine.generate_response("Tell me something"))
 
     def test_empty_text_preprocessing(self):
         self.assertEqual(nlp_engine.preprocess("   "), [])
