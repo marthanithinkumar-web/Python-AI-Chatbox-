@@ -27,7 +27,7 @@ Signature: ____________________  Date: __________
 I thank the course instructor and department for guidance and the opportunity to practise Python programming through this project.
 
 ## Abstract
-CampusBot is a Python conversational chatbot with both a Tkinter desktop graphical user interface and a console interface. When a Gemini API key is configured, it sends the user's message and recent conversation turns to a generative AI model over HTTPS and displays the generated answer. The desktop GUI provides a chat transcript, message entry, Send button, clear-context control, saved-history viewer, and background API calls so the window remains responsive. The project also demonstrates basic NLP preprocessing, local CSV history, environment-variable-based secret management, API error handling, and automated tests that mock API responses. It requires Python 3.10 or later. Live mode requires internet access, a valid API key, model availability, and quota. It is a classroom prototype, not an official source of college information.
+CampusBot is a standalone Python conversational chatbot contained in one runnable source file, CampusBot.py, with both a Tkinter desktop graphical user interface and a console interface. When a Gemini API key is configured, it sends the user's message and recent conversation turns to a generative AI model over HTTPS and displays the generated answer. The desktop GUI provides a chat transcript, message entry, Send button, clear-context control, saved-history viewer, and background API calls so the window remains responsive. The project also demonstrates basic NLP preprocessing, local CSV history, environment-variable-based secret management, API error handling, and automated tests that mock API responses. It requires Python 3.10 or later. Live mode requires internet access, a valid API key, model availability, and quota. It is a classroom prototype, not an official source of college information.
 
 ## 1. Introduction
 Chatbots interact with people through conversational input. NLP concerns computational processing of human language. CampusBot's live mode uses a generative AI service. A Tkinter desktop interface makes the conversation easier to use than a terminal-only interaction, while the console version remains available for command-line demonstrations.
@@ -63,14 +63,10 @@ User → Tkinter GUI / Console → Gemini response engine → AI response
                    └── UI queue     CSV history storage
 ~~~
 
-## 6. Module description
-- **gui.py:** Tkinter desktop interface, message controls, background requests, and display of responses/history.
-- **main.py:** Console chat loop, input validation, command handling, recursive word-count helper.
-- **nlp_engine.py:** Tokenization, preprocessing, intent classification, Gemini request construction, response parsing, and API error handling.
-- **storage.py:** Appends and reads CSV records.
-- **test_chatbot.py:** Automated tests for NLP, mocked Gemini behavior, validation, storage, and GUI response/context integration.
-- **run_gui.bat:** Starts the desktop interface on Windows.
-- **run_chatbot.bat:** Starts the console interface on Windows.
+## 6. Single-file implementation
+- **CampusBot.py:** The complete runnable application. It contains the Tkinter GUI, console mode, lightweight NLP helpers, Gemini request/response handling, API error handling, conversation-context management, CSV history read/write, and the application entry point.
+- **chat_history.csv:** Created automatically beside CampusBot.py when chat turns are saved; it is runtime data, not source code.
+- The repository also retains earlier modular files and automated tests for development history and regression testing. They are not required to run CampusBot.py.
 
 ## 7. NLP and generative AI
 **Tokenization:** Regular expressions extract lowercase alphanumeric tokens.  
@@ -99,10 +95,10 @@ Run **python -m unittest -v**.
 Automated tests verify application logic using mocked API responses; they do not prove live Gemini availability. Repeat the tests locally and make a real Gemini request with a valid key before the demonstration.
 
 ## 10. Results and discussion
-CampusBot provides a desktop GUI and a console interface backed by the same Gemini engine. The GUI uses a background thread to avoid freezing while the API responds. Conversation context is held in memory during a session, and each answered turn is saved to local CSV history. Generative AI can still make mistakes, so important facts and code should be checked.
+CampusBot.py provides a desktop GUI and a console interface backed by the same Gemini response function in a single source file. The GUI in CampusBot.py uses a background thread to avoid freezing while the API responds. Conversation context is held in memory during a session, and each answered turn is saved to local CSV history. Generative AI can still make mistakes, so important facts and code should be checked.
 
 ## 11. Conclusion
-CampusBot combines a Tkinter interface, console interface, live generative AI API, conversational context, Python modules, CSV persistence, secret handling, API error management, and automated tests. It requires a valid Gemini API key and internet access for flexible answers. It is not an authoritative source for changing college policies or personal records.
+CampusBot.py combines a Tkinter interface, console interface, live generative AI API, conversational context, NLP helpers, CSV persistence, secret handling, and API error management in one runnable source file. The repository's separate tests remain available for regression testing. It requires a valid Gemini API key and internet access for flexible answers. It is not an authoritative source for changing college policies or personal records.
 
 ## 12. Future scope
 Streaming responses, configurable model selection in the UI, retrieval from verified documents, explicit citations, and packaging as a desktop executable could improve usability.
