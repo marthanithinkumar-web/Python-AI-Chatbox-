@@ -1,31 +1,47 @@
-# Project Outcomes — CampusBot
+# Project Outcomes — CampusBot Conversational AI
 
 ## Aim
-Build a Python chatbot that demonstrates introductory NLP and rule-based conversational interaction.
+Develop a conversational Python chatbot that uses a live generative AI service when configured and demonstrates NLP, API integration, context management, file handling, and testing.
 
-## Expected learning outcomes
-1. Explain the purpose of a chatbot and a basic NLP preprocessing pipeline.
-2. Normalize text with case folding, tokenization, stop-word removal, and synonym mapping.
-3. Classify messages using keyword overlap and map intents to responses.
-4. Organize an application into reusable functions and modules.
-5. Read and write structured conversation records using CSV.
-6. Apply input validation, exception handling, and unit testing.
-7. Explain limitations of rule-based systems, ambiguity, and limited vocabulary.
-8. Run a Python project and tests from a terminal.
+## Implemented features
+- Live Gemini API integration using Python's standard-library HTTPS client.
+- General-purpose answers rather than a small fixed set of college-only responses.
+- Recent-turn conversation context to support follow-up questions.
+- A system instruction that encourages direct, clear answers and honest uncertainty.
+- Helpful handling for missing API keys, invalid credentials, quota limits, network problems, and malformed responses.
+- Local CSV history, clear-context command, help/history/exit commands.
+- API key read from the GEMINI_API_KEY environment variable and not stored in source code.
+- Offline fallback for simple commands when the API key is absent.
+- Automated tests that mock the AI API, so tests do not consume API quota.
 
-## Demonstration checklist
-- [ ] Start with python main.py.
-- [ ] Test hello, when is the exam date, when are the tests, and tell me about library books.
-- [ ] Test unknown text: quantum banana spaceship.
-- [ ] Enter history and show saved turns.
-- [ ] Enter exit.
-- [ ] Run python -m unittest -v and record the actual result.
+## Learning outcomes
+After studying and demonstrating the project, a student should be able to:
+1. Explain the difference between rule-based chatbot responses and generative AI.
+2. Explain text preprocessing and simple intent detection.
+3. Integrate a REST API using JSON over HTTPS.
+4. Use environment variables to keep secrets out of source code.
+5. Maintain short conversational context with user/model roles.
+6. Handle HTTP errors, timeouts, quotas, and invalid responses.
+7. Store chat turns in CSV and test Python functions with unittest.
+8. Explain AI limitations, privacy considerations, and the need to verify important information.
 
-## Evaluation
-The tests cover tokenization, stop words, synonym normalization, intent detection, fallback, blank input, recursion, and CSV persistence. GitHub Actions repeats the test command on pushes and pull requests. Record a pass percentage only after an actual successful test run.
+## Setup before demonstrating live AI
+1. Obtain a Gemini API key through Google AI Studio: https://aistudio.google.com/app/apikey
+2. Set the local environment variable GEMINI_API_KEY; follow README.md.
+3. Start with python main.py.
+4. Ask a general question, then ask a follow-up referencing the previous answer.
+5. Type clear and ask a new question to demonstrate context reset.
+6. Run python -m unittest -v.
+
+## Important evaluation note
+The test suite mocks the network response and validates the integration logic without using a real key. Live AI quality, availability, quota, and account access depend on the user's Gemini setup and must be demonstrated with a valid key.
 
 ## Limitations
-Keyword matching is not a trained neural model. The chatbot has no live college data. Ambiguous messages may be misclassified. CSV history is local and not encrypted; use sample data only.
+- Live mode requires internet access, a valid API key, an enabled model, and available quota.
+- AI responses may be wrong; verify important facts.
+- Recent context is held in memory only during the current run.
+- CSV chat history is local and not encrypted.
+- The application is a classroom prototype, not an official college service.
 
 ## Future scope
-A GUI, multilingual support, editable FAQ data, TF-IDF similarity, and a verified official college FAQ source could be added later.
+A graphical chat interface, streaming responses, configurable model selection, retrieval from verified documents, and explicit citations could be added in later versions.
