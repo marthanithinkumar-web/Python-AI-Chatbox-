@@ -2,22 +2,11 @@
 
 **Repository:** https://github.com/marthanithinkumar-web/Python-AI-Chatbox-  
 **Workflow:** CampusBot tests  
-**Environment:** GitHub-hosted Ubuntu 24.04, Python 3.11.17  
-**Command:** python -m unittest -v  
-**Result:** PASS — 10 tests ran, 0 failures, 0 errors (2026-10-23).
+**Test command:** python -m unittest -v  
+**Coverage:** tokenization, basic preprocessing, greeting intent, unknown-intent handling, honest no-key fallback, mocked Gemini response parsing, quota/rate-limit handling, blank input validation, recursive word count, and CSV history round-trip.
 
-Tests passed:
-- Blank input retries
-- CSV history round-trip
-- Recursive word count
-- Empty text handling
-- Exam intent
-- Fees intent
-- Library intent
-- Stop-word removal and synonym mapping
-- Tokenization
-- Unknown-question fallback
+The test suite is designed to run without a real API key and does not consume Gemini quota. Check the latest GitHub Actions run for the current commit's pass/fail status:
 
-Run details: https://github.com/marthanithinkumar-web/Python-AI-Chatbox-/actions/runs/39930633881
+https://github.com/marthanithinkumar-web/Python-AI-Chatbox-/actions
 
-This confirms the automated test suite passed on the hosted runner. Still run the chatbot on the computer used for the college demonstration.
+Live response quality additionally depends on a valid GEMINI_API_KEY, internet access, enabled model access, and available quota. Run the app locally with a valid key to verify end-to-end live generation.
