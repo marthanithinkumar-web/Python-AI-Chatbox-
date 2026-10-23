@@ -1,10 +1,10 @@
-"""CampusBot: a beginner-friendly college information chatbot."""
+"""CampusBot: a conversational Python chatbot with optional live Gemini AI."""
 from nlp_engine import generate_response
 from storage import append_chat, read_history
 
 
 def count_words(text: str) -> int:
-    """Count words recursively for a Python lab demonstration."""
+    """Count words recursively (Python lab demonstration)."""
     words = text.split()
     def count(items):
         return 0 if not items else 1 + count(items[1:])
@@ -24,29 +24,44 @@ def get_non_empty_input(prompt="You: "):
 
 
 def run_chat():
-    print("\n" + "=" * 54)
-    print(" CAMPUSBOT — Python AI Chatbot Using NLP")
-    print("=" * 54)
-    print("Ask about courses, exams, attendance, fees, library,")
-    print("timetable, contact, or type help / history / exit.\n")
+    import os
+    live = bool(os.getenv("GEMINI_API_KEY", "").strip())
+    print("\n" + "=" * 60)
+    print(" CAMPUSBOT — Conversational AI Chatbot")
+    print("=" * 60)
+    print("Mode: " + ("Live Gemini AI" if live else "Limited offline mode (configure GEMINI_API_KEY for AI)"))
+    print("Ask general questions. Commands: help, clear, history, exit.")
+    print("Do not enter passwords, API keys, or confidential information.\n")
+    history = []
     while True:
         message = get_non_empty_input()
-        if message.casefold() in {"exit", "quit", "bye", "goodbye"}:
-            reply = "Goodbye! Thank you for chatting with CampusBot."
+        command = message.casefold()
+        if command in {"exit", "quit", "bye", "goodbye"}:
+            reply = "Goodbye! Thanks for chatting with CampusBot."
             print(f"CampusBot: {reply}")
             append_chat(message, reply)
             break
-        if message.casefold() == "history":
+        if command == "clear":
+            history.clear()
+            print("CampusBot: Conversation context cleared.\n")
+            continue
+        if command == "history":
             rows = read_history()
             if not rows:
-                print("CampusBot: No saved chat history yet.")
+                print("CampusBot: No saved chat history yet.\n")
             else:
-                print("\n--- Recent chat history ---")
+                print("\n--- Recent saved turns ---")
                 for row in rows[-10:]:
                     print(f"You: {row['user']}\nCampusBot: {row['bot']}\n")
             continue
-        reply = generate_response(message)
+        if command == "help":
+            print("CampusBot: Ask about almost any topic. With Gemini enabled, I can answer follow-up questions using this conversation. Commands: clear (reset context), history (show saved turns), exit (quit).\n")
+            continue
+        print("CampusBot: Thinking...\n")
+        reply = generate_response(message, history=history)
         print(f"CampusBot: {reply}\n")
+        history.extend([{"role": "user", "content": message}, {"role": "model", "content": reply}])
+        history = history[-12:]
         append_chat(message, reply)
 
 
