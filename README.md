@@ -1,36 +1,63 @@
-# CampusBot — AI Chatbot Using Python and NLP
+# CampusBot — Conversational AI Chatbot with Python and NLP
 
-A beginner-friendly, offline college-information chatbot for a Python laboratory. It demonstrates a small NLP pipeline without paid APIs or external packages.
+CampusBot now supports a **real generative-AI conversation mode** using Google's Gemini API. It can answer general questions, explain concepts, write code, and handle follow-up questions using recent conversation context. The old fixed-response-only behavior is no longer the main experience.
 
 ## Features
-- Case-insensitive tokenization, stop-word removal, and synonym normalization
-- Keyword-overlap intent classification and predefined responses
-- Courses, exams, attendance, fees, library, timetable, contact, help, greetings, thanks, and about
-- Safe fallback for unmatched questions
-- CSV conversation history and history viewing
-- Input validation, recursive word-count helper, and automated tests
-- GitHub Actions workflow to run tests automatically
+- Live AI responses using Gemini (default model: gemini-2.5-flash)
+- Conversation context for follow-up questions, with a clear-context command
+- System instructions to encourage direct, helpful answers and honest uncertainty
+- API errors, quota limits, and network failures handled with readable messages
+- API key read from an environment variable; no key committed to Git
+- Local CSV history, console chat, and Windows launcher
+- Offline fallback if no API key is configured
+- Automated unit tests and GitHub Actions
 
-## Requirements
-Python 3.10 or later. No third-party packages, internet, or API key are required.
+## 1. Requirements
+- Python 3.10+
+- Internet connection for live AI mode
+- A Gemini API key from Google AI Studio: https://aistudio.google.com/app/apikey
+- No third-party Python packages are required
 
-## Run on Windows
-1. Install Python 3.10+ and select Add Python to PATH.
-2. Download this repository as a ZIP and extract it.
-3. Open PowerShell or Command Prompt in the extracted folder.
-4. Run: **python main.py**
-5. Run tests: **python -m unittest -v**
+## 2. Configure the API key on Windows
+Keep your key private. Do not paste it into source code, GitHub commits, screenshots, or chat messages.
 
-If python is unavailable, try **py main.py** and **py -m unittest -v**.
+**Temporary setup (only for the current PowerShell window):**
+1. Open PowerShell in the project folder.
+2. Run:
+   ```powershell
+   $env:GEMINI_API_KEY = "PASTE_YOUR_GEMINI_API_KEY_HERE"
+   python main.py
+   ```
+3. Replace the placeholder locally with your key. Do not commit the command or key.
 
-## Project files
-- main.py — console application and conversation loop
-- nlp_engine.py — tokenization, preprocessing, intent classification, response selection
-- storage.py — CSV history
-- test_chatbot.py — automated unit tests
-- PROJECT_REPORT.md — editable report draft
-- PROJECT_OUTCOMES.md — learning outcomes
-- SAMPLE_OUTPUT.md — example transcript
+**Persistent setup for your Windows user:**
+1. Open Windows Search and find “Edit environment variables for your account”.
+2. Add a user variable named `GEMINI_API_KEY` and set its value to your key.
+3. Close and reopen PowerShell, then run `python main.py`.
 
-## Scope and privacy
-This is a classroom prototype, not an official college chatbot. It does not connect to a college database or provide verified live dates, fees, or personal records. It directs users to official sources for changing information. Do not enter passwords, payment information, or confidential data.
+Optional: set `GEMINI_MODEL` to a model enabled for your API key. Default is `gemini-2.5-flash`.
+
+## 3. Run
+- Double-click `run_chatbot.bat`, or run `python main.py` from PowerShell.
+- Run tests with `python -m unittest -v` or double-click `run_tests.bat`.
+- Type `clear` to clear conversation context, `history` to view local saved turns, and `exit` to quit.
+
+## 4. How it works
+The program sends the user message and up to 12 recent user/assistant messages to Gemini. The provider generates the response. The Python project keeps only the recent context in memory for the current session; local CSV history is for review and is not automatically sent to the AI. A system instruction encourages helpful responses and discourages invented current facts.
+
+## 5. Security and limitations
+- Your API key is sent to Google's Gemini API over HTTPS and must be protected.
+- Do not use a public repository secret or commit your key. Never share credentials in chat.
+- API availability, rate limits, model access, and pricing depend on your Google AI Studio account and current terms.
+- Without a key, CampusBot is limited to simple built-in replies and cannot provide real generative answers.
+- The chatbot may still be wrong; verify important information.
+- This is a student project, not an official college service.
+
+## Project structure
+- `main.py` — chat loop and commands
+- `nlp_engine.py` — Gemini API integration and NLP helpers
+- `storage.py` — local CSV history
+- `test_chatbot.py` — automated tests
+- `PROJECT_REPORT.md` — report draft
+- `PROJECT_OUTCOMES.md` — learning outcomes
+- `TEST_RESULTS.md` — CI test results
