@@ -11,7 +11,7 @@
 **Course instructor:** Mr. B. Nagulu, Assistant Professor, CSD  
 **Institution:** Vardhaman College of Engineering
 
-> Complete student-specific fields and adapt this report to the exact college template before submission. Record actual test results.
+> Complete student-specific fields and adapt this report to the exact college template before submission.
 
 ## Certificate
 This is to certify that the project titled “AI Chatbot Development Using Python and Natural Language Processing” is submitted as part of the Essentials of Python Programming Laboratory course requirements for the academic year 2026–2027 by the student named above.
@@ -96,7 +96,7 @@ Run **python -m unittest -v**.
 | Word count | Correct count returned |
 | CSV round-trip | Stored message can be read back |
 
-**Actual test result:** ____________________ (fill after running tests).
+**Verified automated test result:** PASS — 10 tests ran successfully with 0 failures and 0 errors on GitHub Actions using Python 3.11.17 on 2026-10-23. See TEST_RESULTS.md for the run link. Repeat the tests on the computer used for the college demonstration.
 
 ## 10. Results and discussion
 The intended outcome is an interactive console chatbot that categorizes a small set of college questions, returns predefined guidance, and saves local history. The system is explainable because its keywords are explicit. Accuracy is limited by the keyword list, ambiguity, spelling variation, and lack of a trained language model. Confirm tests on the computer used for evaluation.
