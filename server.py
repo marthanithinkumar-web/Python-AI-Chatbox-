@@ -103,17 +103,35 @@ def chat():
             return jsonify({"error": "The AI provider returned no readable answer. Please rephrase."}), 502
         return jsonify({"reply": answer})
     except urllib.error.HTTPError as exc:
+        # Log provider diagnostics only; never log request headers or API keys.
         try:
-            details = json.loads(exc.read().decode("utf-8", errors="replace"))
+            raw_body = exc.read().decode("utf-8", errors="replace")[:1200]
+        except Exception:
+            raw_body = ""
+        detail = ""
+        error_code = ""
+        try:
+            details = json.loads(raw_body)
             err = details.get("error", {})
-            detail = err.get("message", "") if isinstance(err, dict) else str(err)
-        except (ValueError, AttributeError):
-            detail = ""
-        app.logger.warning("Groq request failed: model=%s http=%s message=%s", MODEL, exc.code, detail[:300])
+            if isinstance(err, dict):
+                detail = str(err.get("message", "") or "")
+                error_code = str(err.get("code", "") or err.get("type", "") or "")
+            elif err:
+                detail = str(err)
+            if not detail:
+                detail = str(details.get("message", "") or "")
+        except (ValueError, AttributeError, TypeError):
+            pass
+        app.logger.warning(
+            "Groq request failed: model=%s http=%s error_code=%s message=%s body=%s",
+            MODEL, exc.code, error_code[:120], detail[:300], raw_body[:500]
+        )
         if exc.code == 429:
             return jsonify({"error": "The AI provider rate limit was reached. Please wait a moment and try again."}), 429
-        if exc.code in (401, 403):
-            return jsonify({"error": "Groq rejected the backend API key or account access. The CampusBot owner must check the Groq API key."}), 502
+        if exc.code == 401:
+            return jsonify({"error": "Groq authentication failed. Verify that Render's GROQ_API_KEY is active and belongs to the intended Groq project."}), 502
+        if exc.code == 403:
+            return jsonify({"error": "Groq denied this request (HTTP 403). Check the API key's organization/project and organization/project permissions. The owner can see the specific provider error in Render logs."}), 502
         if exc.code == 404:
             return jsonify({"error": "The configured AI model is unavailable. The owner must check GROQ_MODEL in Render."}), 502
         return jsonify({"error": "The AI provider is temporarily unavailable. Please try again."}), 502
