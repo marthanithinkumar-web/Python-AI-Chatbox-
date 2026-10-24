@@ -150,8 +150,8 @@ def run_gui() -> None:
                 "system",
             )
 
-            compose = tk.Frame(root, bg="#f3f5f9", padx=18, pady=(0, 14))
-            compose.pack(fill="x")
+            compose = tk.Frame(root, bg="#f3f5f9", padx=18)
+            compose.pack(fill="x", pady=(0, 14))
             self.entry = tk.Entry(
                 compose, font=("Segoe UI", 11), relief="solid", bd=1
             )
@@ -163,8 +163,8 @@ def run_gui() -> None:
             )
             self.send_button.pack(side="left")
 
-            controls = tk.Frame(root, bg="#f3f5f9", padx=18, pady=(0, 14))
-            controls.pack(fill="x")
+            controls = tk.Frame(root, bg="#f3f5f9", padx=18)
+            controls.pack(fill="x", pady=(0, 14))
             tk.Button(
                 controls, text="Clear conversation", command=self.clear,
                 relief="flat", cursor="hand2",
@@ -217,7 +217,11 @@ def run_gui() -> None:
         ) -> None:
             try:
                 reply = generate_response(message, previous)
-                append_chat(message, reply)
+                # A local history write failure must not discard a valid AI reply.
+                try:
+                    append_chat(message, reply)
+                except OSError:
+                    pass
                 self.results.put(("ok", reply, add_turn(previous, message, reply)))
             except Exception as exc:
                 self.results.put(
@@ -279,7 +283,7 @@ def run_gui() -> None:
                 "CampusBot", "An answer is still being generated. Close anyway?"
             ):
                 return
-            root.destroy()
+            self.root.destroy()
 
     root = tk.Tk()
     CampusBotGUI(root)
