@@ -2,6 +2,7 @@ import csv
 import importlib.util
 import io
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,6 +12,7 @@ import urllib.error
 MODULE_PATH = Path(__file__).resolve().parents[1] / "CampusBot.py"
 SPEC = importlib.util.spec_from_file_location("campusbot", MODULE_PATH)
 campusbot = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = campusbot
 SPEC.loader.exec_module(campusbot)
 
 
@@ -68,9 +70,16 @@ class CampusBotCoreTests(unittest.TestCase):
 
     @patch("campusbot.urllib.request.urlopen")
     def test_malformed_json_is_handled(self, urlopen):
-        class BadResponse(FakeResponse):
-            def __init__(self):
-                self.payload = b"not-json"
+        class BadResponse:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return False
+
+            def read(self):
+                return b"not-json"
+
         urlopen.return_value = BadResponse()
         self.assertIn("unexpected response", campusbot.generate_response("hello").lower())
 
@@ -92,11 +101,12 @@ class CampusBotCoreTests(unittest.TestCase):
                 campusbot.append_chat("Question, with comma", "Answer")
                 campusbot.append_chat("Second", "Response")
                 rows = campusbot.read_history()
+                with history_path.open(newline="", encoding="utf-8") as handle:
+                    header = next(csv.reader(handle))
             self.assertEqual(len(rows), 2)
             self.assertEqual(rows[0]["user"], "Question, with comma")
             self.assertEqual(rows[1]["bot"], "Response")
-            with history_path.open(newline="", encoding="utf-8") as handle:
-                self.assertEqual(next(csv.reader(handle))[0], "timestamp")
+            self.assertEqual(header[0], "timestamp")
 
 
 if __name__ == "__main__":
