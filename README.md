@@ -1,72 +1,58 @@
 # CampusBot — Python AI Chatbot
 
-**Run `CampusBot.py` for the standalone desktop application.** It contains the Tkinter GUI, shared AI connection, recent conversation context, and local CSV history.
+**Desktop entry point: `CampusBot.py`.** This standalone Tkinter application connects to the hosted CampusBot backend, keeps recent conversation context in memory, and saves chat history to a local CSV file.
 
 ## Features
+
 - Desktop chat window with Send and Enter-to-send
-- Shared Gemini-powered backend; friends do not need their own API key
+- Shared Groq-powered AI backend; users do not need their own API key
 - Background network requests to keep the GUI responsive
-- Conversation context for follow-up questions
+- Recent conversation context for follow-up questions
 - Clear conversation and view locally saved chat history
-- CSV history saved beside the script
-- Prompt instructions for handling typos, misspellings, missing words, informal grammar, and multi-part questions
-- Concise answers by default while aiming to answer every part
 - Friendly handling of network and backend errors
 - Automated regression tests through GitHub Actions
 
-## Requirements
-- Python 3.10 or newer
-- Tkinter/Tcl-Tk installed
-- Internet connection for live AI responses
+## Run the desktop application
 
-## Run CampusBot
+Requirements: Python 3.10 or newer, Tkinter/Tcl-Tk, and an internet connection.
 
-Download `CampusBot.py` from this repository, or download the repository ZIP and extract it. Open a terminal in the folder containing the file and run:
+Open a terminal in this folder and run:
 
 ```powershell
 python CampusBot.py
 ```
 
-The app connects to the shared backend at https://campusbot-ai-backend.onrender.com by default. **Friends do not need to create or enter a Gemini API key.** A Render free service may take longer to answer its first request after inactivity while it wakes up.
+Or double-click `run_gui.bat` on Windows. The app uses `https://campusbot-ai-backend.onrender.com` by default. To use another compatible backend, set `CAMPUSBOT_BACKEND_URL` before starting the app.
 
-## Reply quality and speed
+A Render free service may take longer to answer the first request after inactivity while it wakes up. CampusBot waits for the complete reply; token-by-token streaming is not implemented. It does not perform live web search, so verify changing facts against authoritative current sources.
 
-The shared backend uses Gemini Flash by default, a compact system prompt, a bounded recent conversation context, and a 1,024-token output limit to reduce avoidable generation work. The prompt asks the AI to interpret typos and missing words, use context for follow-ups, answer all parts, and be concise by default. These settings can help reduce unnecessary latency but cannot guarantee a response time; network conditions, Render wake-up, Gemini availability, and quota still matter.
+## Backend deployment
 
-The current client displays the response after the full reply has arrived; token-by-token streaming is not implemented yet. The app does not currently perform live web search, so users should verify changing facts against authoritative current sources.
+The Flask backend is in `server.py`; the deployment uses `requirements.txt` and should start with:
 
-## Optional developer configuration
+```bash
+gunicorn server:app
+```
 
-`CAMPUSBOT_BACKEND_URL` can override the shared backend URL. Leave it at its default for normal use. The client does not accept a direct Gemini API key; the key is kept privately in the backend's Render environment settings.
+Configure `GROQ_API_KEY` in the hosting provider's private environment settings. `GROQ_MODEL` is optional and selects the model. Never put a real API key in source code, chat, or GitHub.
 
-Never paste a real API key into source code, chat, or GitHub.
+The backend includes basic per-IP rate limiting and input-size limits. It is a student project, not a private or production-grade service. AI may make mistakes; verify important facts and code.
 
-## Chat history
+## Chat history and privacy
 
-Chat turns are saved in `chat_history.csv` in the same folder for local review. Conversation context is sent to the shared AI backend to support follow-up questions, but the CSV file itself is not uploaded. Do not enter passwords, API keys, or confidential information in chat; CSV history is stored locally and is not encrypted.
-
-## Project report
-
-Open [PROJECT_REPORT.md](PROJECT_REPORT.md) for the updated academic report. Fill in student-specific fields and align it with the exact college submission template before submitting.
+Completed exchanges are saved to `chat_history.csv` beside `CampusBot.py`. The CSV is local and is not uploaded by the client, but it is not encrypted. Recent conversation context is sent to the hosted AI backend to support follow-up questions. Do not enter passwords, API keys, or confidential information.
 
 ## Tests
 
-Run locally:
+Run the desktop-client regression tests locally:
 
 ```powershell
 python -m py_compile CampusBot.py server.py tests/test_campusbot.py
 python -m unittest discover -s tests -v
 ```
 
-GitHub Actions runs compilation and regression tests on pushes and pull requests to `main`. The tests mock network replies; they do not prove live Gemini availability or measure real response latency.
+GitHub Actions compiles the desktop client and backend, then runs mocked client tests. These tests do not prove live Groq availability or measure production response latency.
 
-## Security and limitations
+## Project report
 
-- Shared AI requests use HTTPS to the project's hosted backend, which calls Google's Gemini API.
-- The backend is public and applies basic rate limiting; do not treat it as a private or production-grade service.
-- AI may make mistakes; verify important facts and code.
-- CampusBot is a student project, not an official college service.
-
-## Repository maintenance
-
-`CampusBot.py` is the standalone GUI file intended for simple running and submission. Older modular source files and tests remain for development history and regression testing; they are not required to run the standalone app.
+See [PROJECT_REPORT.md](PROJECT_REPORT.md) for the academic report. Fill in student-specific fields and align it with the exact college submission template before submitting.
