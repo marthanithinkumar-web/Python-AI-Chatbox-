@@ -1,214 +1,258 @@
-# PROJECT REPORT
+# COURSE END PROJECT REPORT
 
-## CampusBot — AI Chatbot Using Python and Generative AI
+## CampusBot — AI Chatbot Development Using Python and NLP
 
-**Project title:** CampusBot — AI Chatbot Using Python and Generative AI  
-**Course:** Essentials of Python Programming Laboratory  
+**Course:** Essentials of Python Programming Laboratory (A9514)  
 **Academic year:** 2026–2027  
 **Branch / year:** CSD, B.Tech II Year  
-**Student name:** ____________________  
+**Student name:** Martha Nithin Kumar  
 **Roll number:** ____________________  
 **Batch / section:** ____________________  
 **Course instructor:** Mr. B. Nagulu, Assistant Professor, CSD  
 **Institution:** Vardhaman College of Engineering
 
-> Fill in student-specific fields and match any required college cover page, certificate, and formatting template before submission.
+> Fill in the roll number, batch/section, submission date, and any fields required by the college before submitting.
 
 ## Certificate
 
-This is to certify that the project titled “CampusBot — AI Chatbot Using Python and Generative AI” is submitted as part of the Essentials of Python Programming Laboratory course requirements for the academic year 2026–2027 by the student named above.
+This is to certify that the course end project entitled “CampusBot: AI Chatbot Development Using Python and NLP” has been carried out by Martha Nithin Kumar as part of the requirements for Essentials of Python Programming Laboratory (A9514) during the academic year 2026–2027.
 
-Instructor signature: ____________________  Date: __________
+Course Instructor: ____________________  
+Head of the Department: ____________________  
+Date: ____________________
 
 ## Declaration
 
-I declare that this report describes the CampusBot desktop chatbot project and its current implementation. External technical references are listed at the end of the report.
+I declare that this report describes the CampusBot project and its implementation to the best of my knowledge. External technical resources used for the implementation are acknowledged in the references.
 
-Signature: ____________________  Date: __________
+Signature: ____________________  
+Date: ____________________
 
 ## Acknowledgement
 
-I thank the course instructor and department for the opportunity to apply Python programming concepts through this project.
+I express my sincere gratitude to Mr. B. Nagulu, course instructor, and the Department of Computer Science and Engineering (Data Science), Vardhaman College of Engineering, for the guidance and opportunity to undertake this project. I also thank my institution and everyone who supported the learning and testing of this application.
 
 ## Abstract
 
-CampusBot is a Python desktop chatbot with a Tkinter graphical interface and a shared, hosted Gemini AI backend. The desktop client is designed to be easy to run: users do not need to place a Gemini API key in the desktop application. The GUI supports typing or pressing Enter to send a message, viewing the conversation, clearing the current conversation context, and opening locally saved CSV chat history. Network requests run in a background thread so the window can remain responsive while the backend generates a reply. The backend keeps the Gemini credential in the Render service environment, sends recent conversation context to Gemini, validates incoming requests, limits request frequency, and returns readable errors for provider or network failures. The prompt is designed to understand typos, missing words, imperfect grammar, and follow-up questions; answer all parts of a request; and avoid confidently inventing changing facts. The project includes automated regression tests and a GitHub Actions workflow. AI answers still require verification, and live response speed depends on network conditions, service wake-up time, Gemini latency, and provider quota.
+CampusBot is an AI-powered conversational chatbot built with a Python Flask backend and a hosted large language model accessed through the Groq API. It accepts natural-language questions and returns generated answers, with instructions designed to handle spelling mistakes, missing words, informal grammar, and follow-up questions. The backend validates incoming messages, includes bounded recent conversation history, limits repeated requests, and returns readable errors when the provider or network fails. The API credential is configured as a server-side environment variable on Render rather than embedded in source code. The deployed project was tested with greeting and general-question prompts, and the user confirmed that the chatbot was returning satisfactory replies after the latest fix. The system remains dependent on internet connectivity, provider availability, model access, and usage limits; generated answers should be checked when accuracy or current facts matter.
+
+**Keywords:** Python, Natural Language Processing, Generative AI, Flask, Groq API, REST API, JSON, Render, chatbot.
 
 ## 1. Introduction
 
-A chatbot provides a conversational way for a user to ask questions and receive responses. CampusBot combines a Python desktop GUI with a generative AI service to support flexible, natural-language questions rather than relying only on fixed keyword responses. Tkinter provides the desktop interface, Python's standard library handles HTTP requests and local CSV history, and a Flask backend securely calls Gemini.
+A chatbot is a software application that enables users to communicate with a computer system through natural language. Traditional rule-based chatbots rely on predefined keywords and responses and can fail when a user makes spelling errors or phrases a question unexpectedly. Generative AI models can produce more flexible responses based on the prompt and conversation context.
 
-## 2. Problem statement
+CampusBot connects a Python Flask backend to a hosted language model through the Groq chat-completions API. A client sends a question to the backend over HTTP, the backend forwards the message and a limited conversation history to the model, and the generated response is returned to the client as JSON. The backend is hosted on Render.
 
-A basic rule-based chatbot often struggles with spelling mistakes, missing words, informal phrasing, and follow-up questions. CampusBot aims to accept natural language more flexibly while keeping the interface responsive during network activity. It should preserve useful recent context, return understandable errors when the service is unavailable, and avoid presenting uncertain or changing information as guaranteed fact.
+## 2. Problem Statement and Objectives
 
-## 3. Objectives
+### 2.1 Problem Statement
 
-- Build a straightforward Python desktop chatbot with a Tkinter GUI.
-- Use a shared Gemini-powered backend so users do not need their own API key.
-- Improve understanding of typos, misspellings, missing words, informal phrasing, and follow-up questions.
-- Keep the desktop interface responsive while the network request runs.
-- Keep answers direct and reasonably concise by default while answering every part of a question.
-- Preserve recent conversational context for follow-up questions.
-- Save completed exchanges in a local CSV file and provide a history viewer.
-- Handle network, malformed-response, HTTP, quota, and configuration errors gracefully.
-- Keep the Gemini API key on the backend rather than in the desktop source or repository.
-- Run automated regression checks through GitHub Actions.
+Users often type short, informal or misspelled questions. A basic fixed-response chatbot may not understand these variations or follow-up questions. This project addresses the problem by integrating a generative AI model while keeping API credentials on the server and providing controlled error messages when a request cannot be completed.
 
-## 4. Software and hardware requirements
+### 2.2 Objectives
 
-**Software:** Python 3.10 or newer, Tkinter/Tcl-Tk, an internet connection, GitHub repository, and a hosted backend.  
-**Desktop dependencies:** Python standard library; no third-party package is required for the desktop client.  
-**Backend dependencies:** Flask and Gunicorn, as listed in `requirements.txt`.  
-**AI service:** Google Gemini API access configured on the backend.  
-**Hardware:** A computer capable of running Python and Tkinter.
+- Develop a conversational chatbot backend using Python and Flask.
+- Connect the backend to a hosted generative AI model through the Groq API.
+- Support natural-language questions and bounded recent conversation context.
+- Validate requests and provide understandable errors for invalid input, rate limits and provider failures.
+- Protect the API credential using a server-side environment variable.
+- Deploy the backend to Render and verify live question-and-answer behaviour.
 
-## 5. System architecture
+## 3. Requirements and Feasibility
 
-1. The user types a question in the CampusBot window and presses Send or Enter.
-2. The client validates that the message is not blank and that another request is not already running.
-3. The client sends the message and recent conversation context to the hosted backend over HTTPS in a background thread.
-4. The Flask backend validates the request, applies basic rate limiting, and reads `GEMINI_API_KEY` from the server environment.
-5. The backend submits the conversation to the configured Gemini model and parses the generated answer.
-6. The desktop client receives the result through a thread-safe queue and updates the GUI.
-7. The completed exchange is appended to `chat_history.csv` in the local application folder.
+### 3.1 Software Requirements
+
+| Component | Technology / purpose |
+|---|---|
+| Programming language | Python 3 |
+| Web framework | Flask |
+| AI service | Groq Chat Completions API |
+| Configured model | `openai/gpt-oss-120b` (Render environment setting at time of report) |
+| Transport / format | HTTPS, HTTP POST, JSON |
+| Hosting | Render |
+| Source control | Git and GitHub |
+| Configuration | `GROQ_API_KEY` and `GROQ_MODEL` environment variables |
+
+### 3.2 Hardware Requirements
+
+A standard computer capable of using a modern web browser and an internet connection is sufficient for testing the hosted application. Model inference runs through the hosted API rather than locally on the user's computer.
+
+### 3.3 Feasibility
+
+Technical feasibility is supported by Python, Flask, HTTP/JSON and a hosted API. Operational feasibility is supported by a simple chat interface and readable error responses. Economic feasibility depends on the provider's current quota and pricing terms, which may change and should be checked before sustained use.
+
+## 4. System Architecture and Design
+
+### 4.1 Architecture
 
 ```text
-User
-  ↓
-Tkinter desktop GUI
-  ↓ HTTPS request + recent context (background thread)
-CampusBot Flask backend on Render
-  ↓ Gemini API request (server-side secret)
-Google Gemini
-  ↓ generated reply
-Backend → desktop queue → chat transcript
-                         ↓
-                  local CSV history
+User / Chat Interface
+        |
+        | HTTPS POST with JSON message and recent history
+        v
+CampusBot Flask Backend (Render)
+  - request validation
+  - per-IP request limiting
+  - prompt and context construction
+  - server-side API key retrieval
+        |
+        | HTTPS request with Authorization header
+        v
+Groq Chat Completions API
+        |
+        | generated assistant message
+        v
+Flask backend returns JSON reply to client
 ```
 
-## 6. Main modules and files
+### 4.2 Request Flow
 
-- **`CampusBot.py`:** The standalone desktop application. It includes the Tkinter GUI, backend HTTP client, recent-context management, background requests, error handling, CSV history, and application entry point.
-- **`server.py`:** Flask API hosted separately. It validates chat requests, applies basic per-IP request limiting, sends prompts to Gemini, and returns the reply or a controlled error.
-- **`requirements.txt`:** Backend Python dependencies.
-- **`.env.example`:** Example configuration names; it must not contain real secrets.
-- **`tests/test_campusbot.py`:** Regression tests for client behavior using mocked network responses.
-- **`.github/workflows/campusbot-tests.yml`:** Runs Python compilation and regression tests on pushes and pull requests.
-- **`chat_history.csv`:** Runtime data created beside the desktop script when conversations are saved. It is not source code and should not be committed with private conversation content.
-- **`README.md`:** Setup and run instructions.
+1. The user enters a message in the chat interface.
+2. The client sends a JSON POST request to the `/chat` endpoint.
+3. The backend checks request frequency, API configuration, JSON structure and message content.
+4. The backend builds a system instruction, includes bounded recent history and appends the new user message.
+5. The backend sends the request to Groq using the configured model and server-side `GROQ_API_KEY`.
+6. The backend parses the generated content and returns a JSON reply.
+7. If the provider rejects the request or a network problem occurs, the backend logs safe diagnostics and returns a controlled error.
 
-## 7. Natural-language understanding and response quality
+### 4.3 Main Backend Components
 
-CampusBot uses a generative AI model rather than training a language model itself. Its backend instructions ask Gemini to:
-- interpret spelling mistakes, missing words, imperfect grammar, and follow-up questions using context;
-- address all meaningful parts of a multi-part question;
-- start with the answer rather than lengthy filler;
-- provide examples when they improve understanding;
-- ask for clarification only when ambiguity materially affects the answer;
-- acknowledge uncertainty and avoid inventing facts, citations, dates, fees, college policies, or live status.
+| Component | Responsibility |
+|---|---|
+| Flask application | Defines service and chat routes. |
+| Request validation | Rejects empty, malformed or unsupported input. |
+| Rate limiting | Limits repeated requests from an IP within a rolling time window. |
+| Prompt/context builder | Adds the system instruction and bounded recent messages. |
+| Groq API client logic | Sends the HTTP request, reads the response and extracts the answer. |
+| Error handling | Handles HTTP errors, timeouts, connection errors and unreadable responses. |
+| Environment configuration | Reads `GROQ_API_KEY` and `GROQ_MODEL` from environment variables. |
 
-These are instructions to the model, not a guarantee that every answer will be correct. The application has no dedicated web-search/retrieval pipeline in the current implementation, so changing facts should be checked against authoritative current sources rather than assumed to have been live-verified by CampusBot.
+## 5. Implementation
 
-## 8. Response-speed measures and limitations
+### 5.1 Important Files and Settings
 
-The client makes the HTTP request on a background thread so the GUI does not freeze during generation. The backend uses Gemini Flash by default and keeps the prompt compact. The backend is configured to limit generated output to 1,024 tokens, which helps avoid unnecessarily long generations while leaving room for useful answers. It passes only recent conversation context rather than an unlimited transcript. Answers are expected to be concise by default, but the model should still answer all parts of a question.
+| File / setting | Purpose |
+|---|---|
+| `server.py` | Flask backend, validation, rate limiting, provider call and error handling. |
+| `requirements.txt` | Lists Python packages required by the backend. |
+| `GROQ_API_KEY` | Secret API key stored in Render environment variables; never include the value in source code or this report. |
+| `GROQ_MODEL` | Model identifier configured in Render; currently reported as `openai/gpt-oss-120b`. |
+| GitHub repository | Stores version-controlled project source. |
+| Render service | Hosts the backend at https://campusbot-ai-backend.onrender.com. |
 
-These changes reduce avoidable prompt/output work; they do not guarantee a fixed response time. Actual latency depends on the Render service waking from inactivity, the user's internet connection, Gemini response time, model availability, and quota. The current client receives the complete reply before showing it; **token-by-token streaming is not implemented**. Streaming remains a possible next improvement to show the first words earlier, although it would not necessarily reduce total generation time. No numeric speed improvement is claimed because no controlled latency benchmark has been recorded.
+### 5.2 API Endpoint
 
-## 9. Conversation context, history, and privacy
+The `POST /chat` endpoint accepts a JSON object containing a message and optional history. A successful response contains a `reply` field. Invalid input and provider failures return a JSON error message with an appropriate HTTP status.
 
-The client keeps recent conversation turns in memory during the active session and sends a bounded context window for follow-up questions. The Clear conversation control removes the active in-memory context; it does not erase saved CSV history. Show saved history reads the most recent saved exchanges from the local file. The CSV is stored locally and is not encrypted. The backend receives the current question and recent context to generate a response. Users should not enter passwords, API keys, or sensitive personal information.
+Request example:
 
-The Gemini API key must remain in the Render environment variable `GEMINI_API_KEY`; it must never be embedded in the desktop application, checked into GitHub, or included in the report.
-
-## 10. Test plan
-
-Run the automated suite from the repository root:
-
-```powershell
-python -m py_compile CampusBot.py tests/test_campusbot.py
-python -m unittest discover -s tests -v
+```json
+{
+  "message": "WHAT IS PYTHON?",
+  "history": []
+}
 ```
 
-The GitHub Actions workflow runs these checks automatically for pushes and pull requests to `main`. The test suite uses mocked HTTP responses and checks:
-- successful reply parsing and recent-context payload;
-- empty reply handling;
-- HTTP/rate-limit error handling;
-- network failure handling;
-- malformed JSON handling;
-- missing backend URL handling;
-- bounded conversation history;
-- CSV history read/write round-trip.
+Successful response shape:
 
-Passing mocked tests validates the tested application logic; it does not prove that a real Gemini request will succeed or measure live latency. A separate desktop smoke test should launch the GUI, send a normal question, ask a follow-up, try a typo-filled question, clear the conversation, and inspect saved history.
+```json
+{
+  "reply": "Python is a high-level programming language ..."
+}
+```
 
-## 11. Results and discussion
+### 5.3 Prompt and Context Handling
 
-The current project is a GUI-only desktop client connected to a shared backend, rather than the earlier console-plus-GUI design described in some legacy files. The client is intended to run with `python CampusBot.py`; friends do not need a Gemini API key. Background requests and a queue separate network work from Tkinter UI updates. The backend keeps the API key off the client and returns user-readable errors for several common failure cases. Regression tests run in GitHub Actions.
+The system instruction asks the model to answer directly, understand common typing mistakes and follow-up questions, use examples when helpful, and avoid inventing changing facts. The backend accepts supported conversation roles and bounds the amount of recent history included in the request. This helps keep requests controlled but does not guarantee that every answer will be correct.
 
-The quality of a reply depends on the prompt, the recent context, Gemini's output, and the current availability of the hosted service. The program is not a source of official college policy. Current deadlines, fees, schedules, and other changing information must be confirmed from authoritative sources.
+### 5.4 API Error Handling
 
-## 12. Conclusion
+The backend handles common failures such as missing configuration, invalid input, rate limiting, authentication errors, forbidden requests, unavailable models, and connection or timeout failures. Provider diagnostics are written to application logs without logging the Authorization header or API key. During troubleshooting, Groq requests returned HTTP 403 with error code 1010. The backend was updated to log provider response details safely and to send an explicit `User-Agent` header.
 
-CampusBot demonstrates a practical Python desktop GUI, HTTP/JSON communication, a Flask API, integration with a hosted generative AI model, environment-based secret management, thread-safe UI updates, CSV file handling, exception handling, and automated tests. Its design aims to make natural-language interaction more flexible and keep the desktop interface responsive. The project remains a student prototype: live AI requires internet access, the hosted service, model access, and available quota, and AI-generated answers may be wrong.
+## 6. Testing and Results
 
-## 13. Future scope
+### 6.1 Test Cases
 
-- Implement end-to-end Gemini streaming and show partial text as it arrives.
-- Record request duration and first-token/complete-response timings to compare performance objectively.
-- Add integration tests for the backend's request validation and response parsing.
-- Add verified document retrieval and explicit citations for current or institution-specific information.
-- Add cancellation and retry behavior that does not duplicate or corrupt history.
-- Package the desktop client for simpler installation on Windows.
+| ID | Test | Expected behaviour | Result / evidence |
+|---|---|---|---|
+| TC01 | Send greeting: `HI` | A natural greeting reply is returned. | User-confirmed pass |
+| TC02 | Ask a general question: `WHAT` | An understandable AI-generated response is returned. | User-confirmed pass |
+| TC03 | Ask a question with spelling mistakes | Model attempts to infer intent and respond helpfully. | Test separately before claiming pass |
+| TC04 | Submit an empty message | Backend rejects the request with a readable validation error. | Verify in local or hosted test |
+| TC05 | Send malformed JSON | Backend returns a controlled client error. | Verify in local or hosted test |
+| TC06 | Exceed configured request rate | Backend returns a rate-limit error. | Verify in local or hosted test |
+| TC07 | Provider rejects a request | Backend logs safe diagnostics and returns a controlled error. | Observed during troubleshooting |
+| TC08 | Inspect API-key handling | Key remains in Render environment configuration. | Configuration requirement |
+| TC09 | Inspect backend health route | Health endpoint reports service status and key-configuration status. | Verify against current implementation |
 
-## 14. References
+### 6.2 Results and Discussion
 
-1. Python Software Foundation, Python documentation: https://docs.python.org/3/
-2. Python Software Foundation, Tkinter documentation: https://docs.python.org/3/library/tkinter.html
-3. Python Software Foundation, CSV documentation: https://docs.python.org/3/library/csv.html
-4. Python Software Foundation, unittest documentation: https://docs.python.org/3/library/unittest.html
-5. Flask documentation: https://flask.palletsprojects.com/
-6. Google Gemini API documentation: https://ai.google.dev/gemini-api/docs
-7. GitHub Actions documentation: https://docs.github.com/actions
+During deployment troubleshooting, Groq requests initially returned HTTP 403 with error code 1010. The backend was updated to log provider response details safely and to send an explicit `User-Agent` header. The user subsequently confirmed that the chatbot's replies were satisfactory. This is a user-confirmed functional smoke test, not a formal benchmark of accuracy, latency or availability.
 
-## Viva questions
+### 6.3 Screenshots to Add Before Submission
 
-1. What is a chatbot?
-2. What is the difference between rule-based responses and generative AI?
+- Screenshot 1: CampusBot application open in a browser.
+- Screenshot 2: A successful greeting response.
+- Screenshot 3: A general question and the generated answer.
+- Screenshot 4: Render service showing the live deployment (hide secrets).
+- Screenshot 5: GitHub repository showing the final source files.
+
+## 7. Security, Limitations and Future Scope
+
+### 7.1 Security
+
+- Keep `GROQ_API_KEY` only in Render environment variables or a suitable secret manager.
+- Never commit API keys, private chat histories or credentials to GitHub.
+- Use HTTPS for communication with the hosted backend and provider.
+- Do not send passwords or sensitive personal information to the chatbot.
+- Review logs to ensure diagnostic messages never contain authorization headers or secrets.
+
+### 7.2 Limitations
+
+- Responses require internet access and availability of the Render service and Groq API.
+- Response quality depends on the selected model, prompt, context and provider service.
+- The chatbot does not guarantee factual correctness and should not be treated as an official source.
+- Live web search or verified college-document retrieval is not described as a current feature of this backend.
+- Response times can vary; no controlled latency benchmark has been recorded.
+
+### 7.3 Future Scope
+
+- Add verified retrieval from college documents and show citations to source material.
+- Measure request latency across repeated tests and report median and percentile timings.
+- Add automated integration tests for the backend's request validation and response parsing.
+- Consider response streaming to display partial output earlier.
+- Improve monitoring for uptime, API quota and provider errors.
+
+## 8. Conclusion
+
+CampusBot demonstrates how a Python Flask backend can integrate a hosted generative AI model through a chat API. The project includes request validation, limited conversation context, rate limiting, environment-based secret management and controlled error handling. The deployed application was confirmed by the user to produce satisfactory replies after troubleshooting the provider request. The system is a student prototype: users should verify important information, and the service depends on network access and provider availability.
+
+## References
+
+1. Groq, “API Reference — Chat Completions.” https://console.groq.com/docs/api-reference
+2. Groq, “Text Generation.” https://console.groq.com/docs/text-chat
+3. Groq, “Security Onboarding.” https://console.groq.com/docs/production-readiness/security-onboarding
+4. Python Software Foundation, “Python Documentation.” https://docs.python.org/3/
+5. Pallets Projects, “Flask Documentation.” https://flask.palletsprojects.com/
+6. GitHub, “GitHub Actions Documentation.” https://docs.github.com/actions
+7. Render, “Render Documentation.” https://render.com/docs
+
+## Appendix A — Run and Deployment Notes
+
+The hosted backend base URL is https://campusbot-ai-backend.onrender.com. The `/health` endpoint reports backend health and whether the API key is configured, and `/chat` handles chat POST requests. For local execution, install packages listed in `requirements.txt`, set `GROQ_API_KEY` as an environment variable, set `GROQ_MODEL` if needed, and start the Flask application using the repository's documented command. Do not place the real API key in the report or commit it to source control.
+
+## Appendix B — Viva Questions
+
+1. What is a chatbot, and how does generative AI differ from a rule-based chatbot?
+2. What is Flask and why is it used in this project?
 3. What is a REST API?
-4. Why are JSON and HTTPS used?
-5. Why should an API key be kept on the backend?
-6. Why does the GUI use a background thread?
-7. What is the purpose of a thread-safe queue?
-8. How does conversation context help with follow-up questions?
-9. Why is CSV used for local history?
-10. What is the purpose of unit testing?
-11. Why do mocked tests not prove live Gemini availability?
-12. Why should changing facts be verified from official sources?
-
-## Appendix A — Run instructions
-
-1. Install Python 3.10 or newer with Tcl/Tk support.
-2. Download or clone the repository and open a terminal in its folder.
-3. Run:
-
-```powershell
-python CampusBot.py
-```
-
-4. Ask a question, then ask a follow-up that refers to the previous response.
-5. Use **Clear conversation** to reset the current context and **Show saved history** to view saved exchanges.
-
-The desktop client uses the shared backend at `https://campusbot-ai-backend.onrender.com` by default. Do not place a Gemini API key in the desktop source.
-
-## Appendix B — Submission checklist
-
-- [ ] Fill in student name, roll number, batch/section, and submission date if required.
-- [ ] Match the report to the college's prescribed template.
-- [ ] Run the regression tests and record the actual result.
-- [ ] Launch the GUI on the target computer.
-- [ ] Test a normal question, a typo-filled question, a follow-up, and a multi-part question.
-- [ ] Demonstrate Clear conversation and Show saved history.
-- [ ] Explain that streaming and live web search are not current features.
-- [ ] Do not claim a measured speed improvement unless an actual benchmark has been run.
+4. Why are HTTP and JSON used for client-server communication?
+5. What is the role of the Groq API?
+6. Why is `GROQ_API_KEY` stored as an environment variable?
+7. What is conversation history and why is it bounded?
+8. What is rate limiting?
+9. How are provider and network errors handled?
+10. Why can an AI answer be incorrect even when the request succeeds?
+11. What is the purpose of deployment on Render?
+12. What improvements could be added in a future version?
