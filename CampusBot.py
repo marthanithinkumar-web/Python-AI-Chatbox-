@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APP_NAME = "CampusBot"
-MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite").strip()
+MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()\nBACKEND_URL = os.getenv("CAMPUSBOT_BACKEND_URL", "https://campusbot-ai-backend.onrender.com").strip()
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 HISTORY_FILE = Path(__file__).with_name("chat_history.csv")
 HISTORY_FIELDS = ["timestamp", "user", "bot"]
@@ -105,11 +105,36 @@ def read_history() -> list[dict[str, str]]:
 
 # -------------------- Gemini response engine --------------------
 def generate_response(text: str, history: list[dict[str, str]] | None = None,
-                      timeout: int = 45) -> str:
+                      timeout: int = 60) -> str:
+    # Shared backend means classmates do not need to create or configure API keys.
+    if BACKEND_URL:
+        payload = {"message": text[:12000], "history": (history or [])[-8:]}
+        request = urllib.request.Request(
+            BACKEND_URL.rstrip("/") + "/chat",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"}, method="POST",
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                data = json.loads(response.read().decode("utf-8"))
+            answer = data.get("reply", "")
+            return answer.strip() if isinstance(answer, str) and answer.strip() else "CampusBot's AI service returned an empty answer. Please try again."
+        except urllib.error.HTTPError as exc:
+            try:
+                data = json.loads(exc.read().decode("utf-8", errors="replace"))
+                detail = data.get("error", "")
+            except (ValueError, AttributeError):
+                detail = ""
+            return detail or f"CampusBot AI service returned HTTP {exc.code}. Please try again."
+        except (urllib.error.URLError, TimeoutError, OSError):
+            return "Couldn't reach CampusBot's shared AI service. Check your internet connection or try again later."
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError):
+            return "CampusBot's shared AI service returned an unexpected response. Please try again."
+
+    # Optional direct-key mode remains available for the project owner/development.
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     if not api_key:
         return OFFLINE_RESPONSES.get(classify_intent(text), OFFLINE_FALLBACK)
-
     turns = []
     for item in (history or [])[-12:]:
         role, content = item.get("role"), item.get("content", "")
@@ -122,10 +147,8 @@ def generate_response(text: str, history: list[dict[str, str]] | None = None,
         "generationConfig": {"temperature": 0.35, "topP": 0.9, "maxOutputTokens": 4096},
     }
     url = API_URL.format(model=MODEL) + "?key=" + api_key
-    request = urllib.request.Request(
-        url, data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"}, method="POST",
-    )
+    request = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"),
+                                     headers={"Content-Type": "application/json"}, method="POST")
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             data = json.loads(response.read().decode("utf-8"))
@@ -143,24 +166,17 @@ def generate_response(text: str, history: list[dict[str, str]] | None = None,
         return (f"The AI response ended without readable text ({reason}). Please try again."
                 if reason else "I couldn't form a useful response. Could you rephrase?")
     except urllib.error.HTTPError as exc:
-        try:
-            error = json.loads(exc.read().decode("utf-8", errors="replace"))
-            detail = error.get("error", {}).get("message", "")
-        except (ValueError, AttributeError):
-            detail = ""
         if exc.code in (400, 401, 403):
             return "Gemini rejected the request or API key. Check the key, API access, and model name."
         if exc.code == 404:
             return f"Gemini model '{MODEL}' is unavailable to this key. Set GEMINI_MODEL to an available model."
         if exc.code == 429:
             return "Gemini quota or rate limit reached. Wait and try again or check Google AI Studio quota."
-        return f"Gemini returned HTTP {exc.code}. Please try again later." + (
-            f" Details: {detail[:250]}" if detail else "")
+        return f"Gemini returned HTTP {exc.code}. Please try again later."
     except (urllib.error.URLError, TimeoutError, OSError):
         return "Couldn't reach Gemini. Check the internet connection and try again."
     except (json.JSONDecodeError, KeyError, TypeError, ValueError):
         return "Gemini returned an unexpected response. Please try again."
-
 
 def add_turn(history: list[dict[str, str]], user: str, bot: str) -> list[dict[str, str]]:
     return [*history, {"role": "user", "content": user},
@@ -182,7 +198,7 @@ def get_non_empty_input(prompt: str = "You: ") -> str:
 
 def run_console() -> None:
     history: list[dict[str, str]] = []
-    live = bool(os.getenv("GEMINI_API_KEY", "").strip())
+    live = bool(BACKEND_URL or os.getenv("GEMINI_API_KEY", "").strip())
     print("\n" + "=" * 54 + "\n CAMPUSBOT — Conversational AI Chatbot\n" + "=" * 54)
     print("Mode:", "Live Gemini AI" if live else "Limited offline mode")
     print("Commands: help, clear, history, exit. Don't enter passwords or API keys.\n")
@@ -237,7 +253,7 @@ def run_gui() -> None:
             header.pack(fill="x")
             tk.Label(header, text="CampusBot", font=("Segoe UI", 20, "bold"),
                      fg="white", bg="#18243a").pack(anchor="w")
-            mode = "Live Gemini AI" if os.getenv("GEMINI_API_KEY", "").strip() else "Limited offline mode"
+            mode = "Shared AI service" if BACKEND_URL else ("Live Gemini AI" if os.getenv("GEMINI_API_KEY", "").strip() else "Limited offline mode")
             self.status = tk.Label(header, text=f"{mode} • Ready", font=("Segoe UI", 10),
                                    fg="#cbd5e1", bg="#18243a")
             self.status.pack(anchor="w", pady=(3, 0))
