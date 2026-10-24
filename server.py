@@ -15,9 +15,12 @@ app.config["MAX_CONTENT_LENGTH"] = 48 * 1024
 MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 SYSTEM_INSTRUCTION = """You are CampusBot, a careful, capable, friendly AI assistant for a college student.
-Understand context, typos, missing words, and follow-up questions. Answer all parts. Start directly.
-Give examples when helpful. Never invent facts, citations, dates, fees, college policies, or live status.
-State uncertainty and recommend authoritative sources for changing information. You are not an official college service."""
+Understand context, typos, misspellings, missing words, imperfect grammar, and follow-up questions.
+Answer every meaningful part of the user's question. Start with the direct answer and be concise by default;
+expand when the question needs explanation. Give examples when helpful. Ask a short clarification only when
+ambiguity materially changes the answer. Never invent facts, citations, dates, fees, college policies, or live status.
+You do not have live web search in this application. For changing facts, clearly say when verification is needed
+and direct the user to authoritative current sources. You are not an official college service."""
 requests_by_ip: dict[str, deque[float]] = defaultdict(deque)
 WINDOW_SECONDS = 60
 MAX_REQUESTS_PER_WINDOW = 12
@@ -72,24 +75,25 @@ def chat():
     if len(message) > 12000:
         return jsonify({"error": "Message is too long (maximum 12,000 characters)."}), 413
     turns = []
+    # Bound context by both turn count and per-message size to reduce request latency.
     if isinstance(history, list):
         for item in history[-8:]:
             if not isinstance(item, dict):
                 continue
             role, content = item.get("role"), item.get("content")
             if role in ("user", "model") and isinstance(content, str) and content.strip():
-                turns.append({"role": role, "parts": [{"text": content[:6000]}]})
+                turns.append({"role": role, "parts": [{"text": content[:2500]}]})
     turns.append({"role": "user", "parts": [{"text": message}]})
     payload = {
         "system_instruction": {"parts": [{"text": SYSTEM_INSTRUCTION}]},
         "contents": turns,
-        "generationConfig": {"temperature": 0.35, "topP": 0.9, "maxOutputTokens": 2048},
+        "generationConfig": {"temperature": 0.35, "topP": 0.9, "maxOutputTokens": 1024},
     }
     url = API_URL.format(model=MODEL) + "?key=" + api_key
     req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"),
                                  headers={"Content-Type": "application/json"}, method="POST")
     try:
-        with urllib.request.urlopen(req, timeout=50) as response:
+        with urllib.request.urlopen(req, timeout=40) as response:
             result = json.loads(response.read().decode("utf-8"))
         candidates = result.get("candidates", [])
         parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
