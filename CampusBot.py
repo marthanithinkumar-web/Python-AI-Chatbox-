@@ -1,9 +1,8 @@
-"""CampusBot — standalone Python chatbot (Tkinter GUI + console).
+"""CampusBot — standalone Tkinter desktop AI chatbot.
 
-Requirements: Python 3.10+, Tkinter for GUI, internet for shared live AI.
-CampusBot uses its shared backend by default; friends do not need a Gemini API key.
-Optional direct-key mode: set CAMPUSBOT_BACKEND_URL to an empty string and GEMINI_API_KEY.
-No third-party Python packages are required.
+Requirements: Python 3.10+, Tkinter, and internet for shared live AI.
+The shared backend is the default; friends do not need a Gemini API key.
+No third-party Python packages are required for the desktop client.
 """
 from __future__ import annotations
 
@@ -15,7 +14,6 @@ import re
 import threading
 import urllib.error
 import urllib.request
-from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -43,23 +41,13 @@ OFFLINE_RESPONSES = {
     "about": "I'm CampusBot, a Python chatbot with a Tkinter desktop interface and optional Gemini AI.",
 }
 OFFLINE_FALLBACK = (
-    "Live AI is not configured, so I can't reliably answer open-ended questions. Set GEMINI_API_KEY "
-    "in your environment and restart CampusBot. Never put your key in source code or GitHub."
+    "Live AI is unavailable right now. Check your internet connection and try again later."
 )
 
 
 # -------------------- Lightweight NLP helpers --------------------
 def tokenize(text: str) -> list[str]:
     return re.findall(r"[a-z0-9]+", text.casefold())
-
-
-def preprocess(text: str) -> list[str]:
-    stop_words = {
-        "a", "an", "the", "is", "are", "to", "for", "of", "in", "on", "and",
-        "or", "i", "you", "me", "my", "what", "when", "where", "how", "do",
-        "does", "can", "please",
-    }
-    return [word for word in tokenize(text) if word not in stop_words]
 
 
 def classify_intent(text: str) -> str | None:
@@ -74,14 +62,6 @@ def classify_intent(text: str) -> str | None:
         return "about"
     return None
 
-
-def most_common_words(text: str, limit: int = 5) -> list[tuple[str, int]]:
-    return Counter(preprocess(text)).most_common(limit)
-
-
-def count_words(text: str) -> int:
-    """Count whitespace-separated words (simple Python lab demonstration)."""
-    return len(text.split())
 
 
 # -------------------- Local CSV history --------------------
@@ -183,55 +163,6 @@ def generate_response(text: str, history: list[dict[str, str]] | None = None,
 def add_turn(history: list[dict[str, str]], user: str, bot: str) -> list[dict[str, str]]:
     return [*history, {"role": "user", "content": user},
             {"role": "model", "content": bot}][-12:]
-
-
-# -------------------- Console interface --------------------
-def get_non_empty_input(prompt: str = "You: ") -> str:
-    while True:
-        try:
-            value = input(prompt).strip()
-        except (EOFError, KeyboardInterrupt):
-            print("\nCampusBot: Session closed. Goodbye!")
-            raise SystemExit(0)
-        if value:
-            return value
-        print("CampusBot: Please type a message before pressing Enter.")
-
-
-def run_console() -> None:
-    history: list[dict[str, str]] = []
-    live = bool(BACKEND_URL or os.getenv("GEMINI_API_KEY", "").strip())
-    print("\n" + "=" * 54 + "\n CAMPUSBOT — Conversational AI Chatbot\n" + "=" * 54)
-    print("Mode:", "Live Gemini AI" if live else "Limited offline mode")
-    print("Commands: help, clear, history, exit. Don't enter passwords or API keys.\n")
-    while True:
-        message = get_non_empty_input()
-        command = message.casefold()
-        if command in {"exit", "quit", "bye", "goodbye"}:
-            reply = "Goodbye! Thanks for chatting with CampusBot."
-            print("CampusBot:", reply)
-            append_chat(message, reply)
-            return
-        if command == "clear":
-            history.clear()
-            print("CampusBot: Conversation context cleared.\n")
-            continue
-        if command == "history":
-            rows = read_history()
-            if not rows:
-                print("CampusBot: No saved chat history yet.\n")
-            else:
-                for row in rows[-10:]:
-                    print(f"You: {row['user']}\nCampusBot: {row['bot']}\n")
-            continue
-        if command == "help":
-            print("CampusBot: Ask questions and use follow-ups. Commands: help, clear, history, exit.\n")
-            continue
-        print("CampusBot: Thinking...\n")
-        reply = generate_response(message, history)
-        print(f"CampusBot: {reply}\n")
-        history = add_turn(history, message, reply)
-        append_chat(message, reply)
 
 
 # -------------------- Tkinter desktop interface --------------------
@@ -394,14 +325,7 @@ def run_gui() -> None:
 
 
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description="CampusBot standalone chatbot")
-    parser.add_argument("--console", action="store_true", help="run in terminal instead of desktop GUI")
-    args = parser.parse_args()
-    if args.console:
-        run_console()
-    else:
-        try:
-            run_gui()
-        except ImportError as exc:
-            raise SystemExit(f"Tkinter is unavailable. Repair Python with Tcl/Tk enabled. Details: {exc}")
+    try:
+        run_gui()
+    except ImportError as exc:
+        raise SystemExit(f"Tkinter is unavailable. Repair Python with Tcl/Tk enabled. Details: {exc}")
