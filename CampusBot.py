@@ -1,7 +1,8 @@
 """CampusBot — standalone Python chatbot (Tkinter GUI + console).
 
-Requirements: Python 3.10+, Tkinter for GUI, internet + GEMINI_API_KEY for live AI.
-Optional environment variable: GEMINI_MODEL (defaults to gemini-3.5-flash-lite).
+Requirements: Python 3.10+, Tkinter for GUI, internet for shared live AI.
+CampusBot uses its shared backend by default; friends do not need a Gemini API key.
+Optional direct-key mode: set CAMPUSBOT_BACKEND_URL to an empty string and GEMINI_API_KEY.
 No third-party Python packages are required.
 """
 from __future__ import annotations
@@ -19,7 +20,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 APP_NAME = "CampusBot"
-MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()\nBACKEND_URL = os.getenv("CAMPUSBOT_BACKEND_URL", "https://campusbot-ai-backend.onrender.com").strip()
+MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+BACKEND_URL = os.getenv("CAMPUSBOT_BACKEND_URL", "https://campusbot-ai-backend.onrender.com").strip()
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 HISTORY_FILE = Path(__file__).with_name("chat_history.csv")
 HISTORY_FIELDS = ["timestamp", "user", "bot"]
@@ -353,7 +355,7 @@ def run_gui() -> None:
                         self.write("CampusBot", reply, "system")
                     self.busy = False
                     self.send_button.configure(state="normal")
-                    mode = "Live Gemini AI" if os.getenv("GEMINI_API_KEY", "").strip() else "Limited offline mode"
+                    mode = "Shared AI service" if BACKEND_URL else ("Live Gemini AI" if os.getenv("GEMINI_API_KEY", "").strip() else "Limited offline mode")
                     self.status.configure(text=f"{mode} • Ready")
                     self.entry.focus_set()
             except queue.Empty:
