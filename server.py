@@ -89,7 +89,11 @@ def chat():
     req = urllib.request.Request(
         API_URL,
         data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"},
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}",
+            "User-Agent": "CampusBot/1.0 (+https://campusbot-ai-backend.onrender.com)",
+        },
         method="POST",
     )
     try:
