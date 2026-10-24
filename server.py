@@ -12,7 +12,7 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 48 * 1024
-MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip()
+MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 SYSTEM_INSTRUCTION = """You are CampusBot, a careful, capable, friendly AI assistant for a college student.
 Understand context, typos, misspellings, missing words, imperfect grammar, and follow-up questions.
@@ -102,11 +102,26 @@ def chat():
             return jsonify({"error": "The AI provider returned no readable answer. Please rephrase."}), 502
         return jsonify({"reply": answer})
     except urllib.error.HTTPError as exc:
+        # Log only sanitized provider diagnostics (never the API key or request payload).
+        try:
+            provider_data = json.loads(exc.read().decode("utf-8", errors="replace"))
+            provider_error = provider_data.get("error", {})
+            provider_status = provider_error.get("status", "") if isinstance(provider_error, dict) else ""
+            provider_message = provider_error.get("message", "") if isinstance(provider_error, dict) else ""
+        except (ValueError, AttributeError):
+            provider_status, provider_message = "", ""
+        app.logger.warning(
+            "Gemini request failed: model=%s http=%s status=%s message=%s",
+            MODEL, exc.code, provider_status, provider_message[:300],
+        )
         if exc.code == 429:
-            return jsonify({"error": "Shared AI quota/rate limit reached. Please wait and try again."}), 429
-        if exc.code in (400, 401, 403, 404):
-            app.logger.warning("Gemini rejected request: HTTP %s", exc.code)
-            return jsonify({"error": "The shared AI service needs configuration or has reached a provider limit. Please contact the CampusBot owner."}), 502
+            return jsonify({"error": "Shared AI quota/rate limit reached. Please wait a minute and try again."}), 429
+        if exc.code in (401, 403):
+            return jsonify({"error": "Gemini rejected the backend API key or this project's model access. The CampusBot owner must check the Gemini API key and access settings."}), 502
+        if exc.code == 404:
+            return jsonify({"error": "The configured Gemini model is unavailable to this API project. The backend has been updated to use the current default model; if this persists, the owner must check GEMINI_MODEL and Gemini model access."}), 502
+        if exc.code == 400:
+            return jsonify({"error": "Gemini rejected the request format or model settings. Check the backend logs for sanitized diagnostic details."}), 502
         return jsonify({"error": "The AI provider is temporarily unavailable. Please try again."}), 502
     except (urllib.error.URLError, TimeoutError, OSError, ValueError):
         return jsonify({"error": "The AI provider could not be reached. Please try again."}), 502
