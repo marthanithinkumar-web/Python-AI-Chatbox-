@@ -23,6 +23,7 @@ for changing facts, say verification may be needed and point to authoritative so
 requests_by_ip: dict[str, deque[float]] = defaultdict(deque)
 WINDOW_SECONDS = 60
 MAX_REQUESTS_PER_WINDOW = 12
+PROVIDER_TIMEOUT_SECONDS = 22  # Stay below Gunicorn's default 30-second worker timeout.
 
 
 def allowed(ip: str) -> bool:
@@ -93,8 +94,19 @@ def chat():
     req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"),
                                  headers={"Content-Type": "application/json"}, method="POST")
     try:
-        with urllib.request.urlopen(req, timeout=40) as response:
-            result = json.loads(response.read().decode("utf-8"))
+        # Gemini can briefly return 503 during demand spikes. Retry once quickly,
+        # while keeping each network attempt below Gunicorn's default worker timeout.
+        for attempt in range(2):
+            try:
+                with urllib.request.urlopen(req, timeout=PROVIDER_TIMEOUT_SECONDS) as response:
+                    result = json.loads(response.read().decode("utf-8"))
+                break
+            except urllib.error.HTTPError as provider_exc:
+                if provider_exc.code != 503 or attempt == 1:
+                    raise
+                app.logger.warning("Gemini temporarily overloaded (503); retrying once")
+                provider_exc.close()
+                time.sleep(0.4)
         candidates = result.get("candidates", [])
         parts = candidates[0].get("content", {}).get("parts", []) if candidates else []
         answer = "\n".join(part.get("text", "") for part in parts if part.get("text")).strip()
@@ -122,6 +134,8 @@ def chat():
             return jsonify({"error": "The configured Gemini model is unavailable to this API project. The backend has been updated to use the current default model; if this persists, the owner must check GEMINI_MODEL and Gemini model access."}), 502
         if exc.code == 400:
             return jsonify({"error": "Gemini rejected the request format or model settings. Check the backend logs for sanitized diagnostic details."}), 502
+        if exc.code == 503:
+            return jsonify({"error": "Gemini is temporarily overloaded. Please wait a few seconds and try again."}), 503
         return jsonify({"error": "The AI provider is temporarily unavailable. Please try again."}), 502
     except (urllib.error.URLError, TimeoutError, OSError, ValueError):
         return jsonify({"error": "The AI provider could not be reached. Please try again."}), 502
