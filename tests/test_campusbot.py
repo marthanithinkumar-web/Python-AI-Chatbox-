@@ -1,13 +1,11 @@
 import csv
 import importlib.util
-import io
 import json
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
-import urllib.error
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "CampusBot.py"
 SPEC = importlib.util.spec_from_file_location("campusbot", MODULE_PATH)
@@ -16,87 +14,49 @@ sys.modules[SPEC.name] = campusbot
 SPEC.loader.exec_module(campusbot)
 
 
-class FakeResponse:
-    def __init__(self, payload):
-        self.payload = json.dumps(payload).encode("utf-8")
+class NLPChatbotTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.bot = campusbot.NLPChatbot()
 
-    def __enter__(self):
-        return self
+    def test_normalize_text(self):
+        self.assertEqual(campusbot.normalize_text("  HELLO, Python!! "), "hello python")
 
-    def __exit__(self, *_args):
-        return False
+    def test_tokenize(self):
+        self.assertEqual(campusbot.tokenize("Hello, NLP 101!"), ["hello", "nlp", "101"])
 
-    def read(self):
-        return self.payload
+    def test_known_python_intent(self):
+        tag, similarity, _ = self.bot.predict_intent("what is python")
+        self.assertEqual(tag, "python_definition")
+        self.assertGreater(similarity, 0.15)
 
+    def test_known_nlp_intent(self):
+        tag, similarity, _ = self.bot.predict_intent("explain natural language processing")
+        self.assertEqual(tag, "nlp_definition")
+        self.assertGreater(similarity, 0.15)
 
-class CampusBotCoreTests(unittest.TestCase):
-    def setUp(self):
-        self.backend = patch.object(campusbot, "BACKEND_URL", "https://example.test")
-        self.backend.start()
-        self.addCleanup(self.backend.stop)
+    def test_response_for_tokenization(self):
+        self.assertIn("token", self.bot.respond("what is tokenization").lower())
 
-    @patch("campusbot.urllib.request.urlopen")
-    def test_shared_backend_returns_reply_and_sends_recent_history(self, urlopen):
-        urlopen.return_value = FakeResponse({"reply": "Hello from AI"})
-        history = [{"role": "user", "content": str(i)} for i in range(10)]
+    def test_empty_input(self):
+        self.assertIn("type a question", self.bot.respond("   ").lower())
 
-        result = campusbot.generate_response("hello", history)
+    def test_unknown_question_uses_fallback(self):
+        self.assertIn("not confident", self.bot.respond("quantum submarine recipes on mars").lower())
 
-        self.assertEqual(result, "Hello from AI")
-        request = urlopen.call_args.args[0]
-        self.assertEqual(request.full_url, "https://example.test/chat")
-        body = json.loads(request.data.decode("utf-8"))
-        self.assertEqual(body["message"], "hello")
-        self.assertEqual(len(body["history"]), 8)
+    def test_custom_dataset_can_train(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "intents.json"
+            path.write_text(json.dumps({"intents": [
+                {"tag": "greeting", "patterns": ["hello", "hi there"], "responses": ["Hello!"]},
+                {"tag": "farewell", "patterns": ["goodbye", "see you"], "responses": ["Bye!"]}
+            ]}), encoding="utf-8")
+            bot = campusbot.NLPChatbot(path)
+            self.assertEqual(bot.predict_intent("hello")[0], "greeting")
 
-    @patch("campusbot.urllib.request.urlopen")
-    def test_empty_backend_reply_is_handled(self, urlopen):
-        urlopen.return_value = FakeResponse({"reply": "   "})
-        self.assertIn("empty answer", campusbot.generate_response("hello").lower())
-
-    @patch("campusbot.urllib.request.urlopen")
-    def test_http_error_is_reported_without_crashing(self, urlopen):
-        urlopen.side_effect = urllib.error.HTTPError(
-            "https://example.test/chat", 429, "Too Many Requests", {},
-            io.BytesIO(b'{"error":"Rate limit reached"}'),
-        )
-        self.assertEqual(campusbot.generate_response("hello"), "Rate limit reached")
-
-    @patch("campusbot.urllib.request.urlopen")
-    def test_network_error_is_friendly(self, urlopen):
-        urlopen.side_effect = urllib.error.URLError("offline")
-        self.assertIn("couldn't reach", campusbot.generate_response("hello").lower())
-
-    @patch("campusbot.urllib.request.urlopen")
-    def test_malformed_json_is_handled(self, urlopen):
-        class BadResponse:
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *_args):
-                return False
-
-            def read(self):
-                return b"not-json"
-
-        urlopen.return_value = BadResponse()
-        self.assertIn("unexpected response", campusbot.generate_response("hello").lower())
-
-    def test_empty_backend_configuration_fails_gracefully(self):
-        with patch.object(campusbot, "BACKEND_URL", ""):
-            self.assertIn("not configured", campusbot.generate_response("hello").lower())
-
-    def test_add_turn_keeps_most_recent_twelve_messages(self):
-        previous = [{"role": "user", "content": str(i)} for i in range(12)]
-        updated = campusbot.add_turn(previous, "new question", "new answer")
-        self.assertEqual(len(updated), 12)
-        self.assertEqual(updated[-2]["content"], "new question")
-        self.assertEqual(updated[-1]["content"], "new answer")
-
-    def test_csv_history_writes_header_and_reads_rows(self):
-        with tempfile.TemporaryDirectory() as temp_dir:
-            history_path = Path(temp_dir) / "chat_history.csv"
+    def test_csv_history(self):
+        with tempfile.TemporaryDirectory() as temp:
+            history_path = Path(temp) / "chat_history.csv"
             with patch.object(campusbot, "HISTORY_FILE", history_path):
                 campusbot.append_chat("Question, with comma", "Answer")
                 campusbot.append_chat("Second", "Response")
