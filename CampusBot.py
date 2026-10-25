@@ -81,7 +81,7 @@ QUESTION_STARTERS = {"who", "what", "when", "where", "why", "how", "which", "who
 def analyze_text(text: str) -> dict[str, str]:
     """Extract meaningful tokens, key phrases, intent, question type, and sentiment."""
     normalized = unicodedata.normalize("NFKC", text).casefold().strip()
-    tokens = re.findall(r"[^\\W_]+(?:['’][^\\W_]+)?", normalized, flags=re.UNICODE)
+    tokens = re.findall(r"[^\W_]+(?:['’][^\W_]+)?", normalized, flags=re.UNICODE)
     tokens = [token.replace("’", "'") for token in tokens]
     meaningful = [
         token for token in tokens
