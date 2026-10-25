@@ -1,0 +1,280 @@
+{
+  "intents": [
+    {
+      "tag": "greeting",
+      "patterns": [
+        "hi",
+        "hello",
+        "hey",
+        "good morning",
+        "good afternoon",
+        "good evening",
+        "hello there",
+        "hey campusbot",
+        "hii",
+        "howdy"
+      ],
+      "responses": [
+        "Hello! What would you like to learn today?",
+        "Hi there! Ask me a question about Python, NLP, or college study tips.",
+        "Hey! I'm ready to help with the topics I know."
+      ]
+    },
+    {
+      "tag": "goodbye",
+      "patterns": [
+        "bye",
+        "goodbye",
+        "see you",
+        "talk to you later",
+        "exit chat",
+        "see ya"
+      ],
+      "responses": [
+        "Goodbye! Keep practising and have a great day.",
+        "See you later. Keep learning!"
+      ]
+    },
+    {
+      "tag": "thanks",
+      "patterns": [
+        "thanks",
+        "thank you",
+        "thanks a lot",
+        "that helped",
+        "thank you so much"
+      ],
+      "responses": [
+        "You're welcome!",
+        "Happy to help. Ask another question whenever you like.",
+        "You're welcome—practice makes progress."
+      ]
+    },
+    {
+      "tag": "bot_identity",
+      "patterns": [
+        "who are you",
+        "what is your name",
+        "are you a bot",
+        "tell me about yourself",
+        "what can you do"
+      ],
+      "responses": [
+        "I'm CampusBot, a Python desktop chatbot that uses TF-IDF and Logistic Regression to match messages to local intents. I work offline after setup.",
+        "I'm CampusBot. I use a local NLP intent classifier and a response dataset; I don't call an external AI API."
+      ]
+    },
+    {
+      "tag": "python_definition",
+      "patterns": [
+        "what is python",
+        "define python",
+        "explain python",
+        "tell me about python",
+        "python programming language"
+      ],
+      "responses": [
+        "Python is a high-level, general-purpose programming language known for readable syntax. It is used in automation, web development, data analysis, machine learning, and scripting.",
+        "Python is an interpreted, high-level programming language with clear syntax and a large ecosystem of libraries."
+      ]
+    },
+    {
+      "tag": "python_variables",
+      "patterns": [
+        "what is a variable in python",
+        "explain variables",
+        "python variable example",
+        "how to create a variable"
+      ],
+      "responses": [
+        "A variable is a name that refers to a value. Example: `name = 'Nithin'` and `marks = 95`. Python determines the type from the assigned value.",
+        "Example: `age = 18`. Here, `age` is a variable referring to the integer value 18. Use meaningful variable names."
+      ]
+    },
+    {
+      "tag": "python_loops",
+      "patterns": [
+        "what is a loop",
+        "explain for loop",
+        "explain while loop",
+        "python loop example",
+        "difference between for and while"
+      ],
+      "responses": [
+        "A loop repeats code. A `for` loop iterates over a sequence, while a `while` loop repeats as long as its condition is true. Example: `for i in range(3): print(i)`.",
+        "Use a `for` loop when iterating through items or a range. Use a `while` loop when repetition depends on a condition. Ensure the condition eventually changes to avoid an infinite loop."
+      ]
+    },
+    {
+      "tag": "python_functions",
+      "patterns": [
+        "what is a function in python",
+        "explain functions",
+        "how to define a function",
+        "python def example"
+      ],
+      "responses": [
+        "A function is a reusable block of code. Example: `def add(a, b): return a + b`. Call it with `add(2, 3)`, which returns 5.",
+        "Define a Python function with `def`, followed by its name and parameters. Functions improve reuse, readability, and testing."
+      ]
+    },
+    {
+      "tag": "python_lists",
+      "patterns": [
+        "what is a list in python",
+        "explain list",
+        "python list example",
+        "how to add item to list"
+      ],
+      "responses": [
+        "A list is an ordered, mutable collection. Example: `items = ['pen', 'book']`; use `items.append('bag')` to add an item.",
+        "Python lists keep items in order and can be changed. Indexing starts at zero, so `items[0]` returns the first item."
+      ]
+    },
+    {
+      "tag": "nlp_definition",
+      "patterns": [
+        "what is nlp",
+        "define natural language processing",
+        "explain natural language processing",
+        "what does nlp mean",
+        "nlp full form"
+      ],
+      "responses": [
+        "NLP stands for Natural Language Processing. It is an area of AI that helps computers process and analyse human language. Common tasks include tokenization, text classification, sentiment analysis, and information extraction.",
+        "Natural Language Processing combines language-related methods and computing to work with text or speech. Examples include spam detection, translation, chatbots, and sentiment analysis."
+      ]
+    },
+    {
+      "tag": "tokenization",
+      "patterns": [
+        "what is tokenization",
+        "explain tokens in nlp",
+        "how does tokenization work",
+        "split text into words"
+      ],
+      "responses": [
+        "Tokenization splits text into smaller units called tokens, such as words or punctuation. For example, 'I like Python!' can become ['I', 'like', 'Python'].",
+        "Tokenization is an NLP preprocessing step that breaks text into words, subwords, or sentences so later algorithms can process it."
+      ]
+    },
+    {
+      "tag": "tfidf",
+      "patterns": [
+        "what is tf idf",
+        "explain tfidf",
+        "term frequency inverse document frequency",
+        "how does tfidf work"
+      ],
+      "responses": [
+        "TF-IDF means Term Frequency–Inverse Document Frequency. It weights terms by how often they appear in a document and how rare they are across the document collection. In CampusBot it converts patterns into numerical vectors.",
+        "TF-IDF gives higher importance to terms that are useful in a document but less common across the full collection. It lets the chatbot compare a user's text with stored examples."
+      ]
+    },
+    {
+      "tag": "classification",
+      "patterns": [
+        "what is text classification",
+        "explain logistic regression",
+        "what is intent classification",
+        "how does chatbot understand intent"
+      ],
+      "responses": [
+        "Text classification assigns text to a category. CampusBot uses TF-IDF features and a Logistic Regression classifier to choose an intent label, then selects a response stored for that intent.",
+        "Intent classification maps a message to a purpose such as greeting or asking about Python. This project trains Logistic Regression on labelled example phrases."
+      ]
+    },
+    {
+      "tag": "similarity",
+      "patterns": [
+        "what is cosine similarity",
+        "how does text similarity work",
+        "compare two text documents",
+        "why use similarity in chatbot"
+      ],
+      "responses": [
+        "Cosine similarity compares the angle between two non-zero vectors. Values closer to 1 indicate more similar directions. CampusBot uses it to check whether a message resembles its training examples before answering.",
+        "Text similarity helps the chatbot reject messages that are too different from known examples. This reduces—but does not eliminate—incorrect intent matches."
+      ]
+    },
+    {
+      "tag": "project_architecture",
+      "patterns": [
+        "explain this project",
+        "how does campusbot work",
+        "project architecture",
+        "what technologies are used",
+        "how is the chatbot built"
+      ],
+      "responses": [
+        "CampusBot is a Tkinter desktop app. It normalizes and tokenizes text, converts example phrases with TF-IDF, predicts an intent using Logistic Regression, and selects a response from intents.json. It does not use Groq or a remote API.",
+        "The flow is: user message → text normalization/tokenization → TF-IDF vectorization → intent classification and similarity threshold → local response. Chat exchanges can be saved in a CSV file."
+      ]
+    },
+    {
+      "tag": "offline",
+      "patterns": [
+        "does it work offline",
+        "can i use it without internet",
+        "is internet required",
+        "does it need an api key"
+      ],
+      "responses": [
+        "Yes. After Python packages are installed, CampusBot processes messages locally. It needs no internet connection, Groq account, or API key while chatting.",
+        "The NLP model is trained locally from intents.json when the app starts, so normal chat messages are processed on your computer. Install scikit-learn before going offline."
+      ]
+    },
+    {
+      "tag": "study_tips",
+      "patterns": [
+        "give me study tips",
+        "how to prepare for exams",
+        "study tips for college",
+        "how can i study better",
+        "help me focus on studying"
+      ],
+      "responses": [
+        "Try 25-minute focused study sessions, solve questions without looking at notes, review mistakes, and revisit difficult topics after a day. Break a large syllabus into small daily goals.",
+        "For exam preparation, make a topic checklist, practise past questions, explain concepts in your own words, and protect time for sleep and revision."
+      ]
+    },
+    {
+      "tag": "project_limitations",
+      "patterns": [
+        "what are the limitations",
+        "why cant you answer everything",
+        "why is your answer limited",
+        "how can i improve the chatbot"
+      ],
+      "responses": [
+        "I am an intent-based chatbot, not a general-purpose language model. I only know the topics represented in intents.json. Add varied, representative patterns and responses, then test unseen questions to improve coverage.",
+        "My responses come from a small local dataset. I may misclassify unfamiliar wording. Improve the project by expanding intents, balancing examples, evaluating precision/recall, and adding carefully tested local retrieval."
+      ]
+    },
+    {
+      "tag": "help",
+      "patterns": [
+        "help",
+        "what topics do you know",
+        "show examples of questions",
+        "what can i ask",
+        "list your topics"
+      ],
+      "responses": [
+        "Try asking: 'What is Python?', 'Explain tokenization', 'What is TF-IDF?', 'How does CampusBot work?', or 'Give me study tips'. My current knowledge is limited to the examples in intents.json.",
+        "I know basic Python, NLP concepts, how this project works, offline usage, and study tips. Add more examples to intents.json to cover new topics."
+      ]
+    },
+    {
+      "tag": "fallback",
+      "patterns": [
+        "unknown question example",
+        "something else",
+        "other question"
+      ],
+      "responses": [
+        "I may not know that topic yet. Add examples and responses to intents.json to teach me more."
+      ]
+    }
+  ]
+}
