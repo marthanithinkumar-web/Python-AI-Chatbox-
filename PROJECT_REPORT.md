@@ -11,7 +11,7 @@
 **Course instructor:** Mr. B. Nagulu, Assistant Professor, CSD  
 **Institution:** Vardhaman College of Engineering
 
-> Fill in the roll number, batch/section, submission date, and any fields required by the college before submitting.
+> Fill in the roll number, batch/section, submission date, and any college-required fields before submitting.
 
 ## Certificate
 
@@ -23,236 +23,182 @@ Date: ____________________
 
 ## Declaration
 
-I declare that this report describes the CampusBot project and its implementation to the best of my knowledge. External technical resources used for the implementation are acknowledged in the references.
+I declare that this report describes the CampusBot project and its implementation to the best of my knowledge. External technical resources used for implementation are acknowledged in the references.
 
 Signature: ____________________  
 Date: ____________________
 
 ## Acknowledgement
 
-I express my sincere gratitude to Mr. B. Nagulu, course instructor, and the Department of Computer Science and Engineering (Data Science), Vardhaman College of Engineering, for the guidance and opportunity to undertake this project. I also thank my institution and everyone who supported the learning and testing of this application.
+I express my sincere gratitude to Mr. B. Nagulu, course instructor, and the Department of Computer Science and Engineering (Data Science), Vardhaman College of Engineering, for the guidance and opportunity to undertake this project.
 
 ## Abstract
 
-CampusBot is an AI-powered conversational chatbot built with a Python Flask backend and a hosted large language model accessed through the Groq API. It accepts natural-language questions and returns generated answers, with instructions designed to handle spelling mistakes, missing words, informal grammar, and follow-up questions. The backend validates incoming messages, includes bounded recent conversation history, limits repeated requests, and returns readable errors when the provider or network fails. The API credential is configured as a server-side environment variable on Render rather than embedded in source code. The deployed project was tested with greeting and general-question prompts, and the user confirmed that the chatbot was returning satisfactory replies after the latest fix. The system remains dependent on internet connectivity, provider availability, model access, and usage limits; generated answers should be checked when accuracy or current facts matter.
+CampusBot is a desktop chatbot developed in Python to demonstrate fundamental Natural Language Processing techniques. The application uses Tkinter for its graphical interface and a local intent dataset stored in JSON. At startup, it normalizes and tokenizes example phrases, converts them into TF-IDF vectors using unigram and bigram features, and trains a Logistic Regression classifier to identify the likely intent of a user's message. Cosine similarity is used as an additional check against stored examples; when a message is too dissimilar, the chatbot returns a fallback message rather than pretending to understand. Replies are selected from responses defined for the predicted intent. Conversation exchanges can be saved to a local CSV file. This configuration does not use Groq, a hosted language model, Flask, or an external API, so chat processing can continue offline after Python and scikit-learn have been installed. The system is an educational intent-based chatbot, not a generative model. Its coverage depends on the quality and range of examples in the dataset. Unit tests cover preprocessing, intent prediction, fallback behaviour, and history storage.
 
-**Keywords:** Python, Natural Language Processing, Generative AI, Flask, Groq API, REST API, JSON, Render, chatbot.
+**Keywords:** Python, Natural Language Processing, TF-IDF, Logistic Regression, cosine similarity, Tkinter, chatbot, text classification.
 
 ## 1. Introduction
 
-A chatbot is a software application that enables users to communicate with a computer system through natural language. Traditional rule-based chatbots rely on predefined keywords and responses and can fail when a user makes spelling errors or phrases a question unexpectedly. Generative AI models can produce more flexible responses based on the prompt and conversation context.
-
-CampusBot connects a Python Flask backend to a hosted language model through the Groq chat-completions API. A client sends a question to the backend over HTTP, the backend forwards the message and a limited conversation history to the model, and the generated response is returned to the client as JSON. The backend is hosted on Render.
+A chatbot communicates with users through natural language. Exact keyword systems may fail when users phrase questions differently. An NLP-based chatbot can represent example phrases numerically and classify messages into likely intents. CampusBot demonstrates this process with Python and scikit-learn in a small, explainable college project.
 
 ## 2. Problem Statement and Objectives
 
 ### 2.1 Problem Statement
 
-Users often type short, informal or misspelled questions. A basic fixed-response chatbot may not understand these variations or follow-up questions. This project addresses the problem by integrating a generative AI model while keeping API credentials on the server and providing controlled error messages when a request cannot be completed.
+Users express the same question in different ways. A chatbot that relies only on exact phrase matches may fail when wording changes. This project uses text features and a supervised classifier to map messages to known intents and uses similarity checking to provide a fallback for unrelated messages.
 
 ### 2.2 Objectives
 
-- Develop a conversational chatbot backend using Python and Flask.
-- Connect the backend to a hosted generative AI model through the Groq API.
-- Support natural-language questions and bounded recent conversation context.
-- Validate requests and provide understandable errors for invalid input, rate limits and provider failures.
-- Protect the API credential using a server-side environment variable.
-- Deploy the backend to Render and verify live question-and-answer behaviour.
+- Build a desktop chatbot using Python and Tkinter.
+- Demonstrate text normalization and tokenization.
+- Represent text with TF-IDF unigram and bigram features.
+- Train a Logistic Regression model to classify intents.
+- Use cosine similarity to help detect out-of-scope messages.
+- Store patterns and responses in an editable JSON file.
+- Save conversation history locally in CSV format.
+- Test preprocessing, predictions, fallback behaviour, and history storage.
+- Avoid external AI APIs and hosted services.
 
 ## 3. Requirements and Feasibility
 
-### 3.1 Software Requirements
-
 | Component | Technology / purpose |
 |---|---|
-| Programming language | Python 3 |
-| Web framework | Flask |
-| AI service | Groq Chat Completions API |
-| Configured model | `openai/gpt-oss-120b` (Render environment setting at time of report) |
-| Transport / format | HTTPS, HTTP POST, JSON |
-| Hosting | Render |
-| Source control | Git and GitHub |
-| Configuration | `GROQ_API_KEY` and `GROQ_MODEL` environment variables |
+| Language | Python 3.10+ |
+| GUI | Tkinter |
+| Feature extraction | scikit-learn TfidfVectorizer |
+| Classifier | scikit-learn LogisticRegression |
+| Similarity | Cosine similarity |
+| Dataset | intents.json |
+| History | Local CSV |
+| Testing | Python unittest |
 
-### 3.2 Hardware Requirements
+A regular laptop or desktop capable of running Python and a graphical desktop environment is sufficient. The project does not require a GPU or dedicated AI server. Install Python dependencies before first use; chat processing is local afterwards.
 
-A standard computer capable of using a modern web browser and an internet connection is sufficient for testing the hosted application. Model inference runs through the hosted API rather than locally on the user's computer.
-
-### 3.3 Feasibility
-
-Technical feasibility is supported by Python, Flask, HTTP/JSON and a hosted API. Operational feasibility is supported by a simple chat interface and readable error responses. Economic feasibility depends on the provider's current quota and pricing terms, which may change and should be checked before sustained use.
-
-## 4. System Architecture and Design
-
-### 4.1 Architecture
+## 4. System Architecture
 
 ```text
-User / Chat Interface
-        |
-        | HTTPS POST with JSON message and recent history
-        v
-CampusBot Flask Backend (Render)
-  - request validation
-  - per-IP request limiting
-  - prompt and context construction
-  - server-side API key retrieval
-        |
-        | HTTPS request with Authorization header
-        v
-Groq Chat Completions API
-        |
-        | generated assistant message
-        v
-Flask backend returns JSON reply to client
+User
+  -> Tkinter desktop chat interface
+  -> text normalization and tokenization
+  -> TF-IDF vectorization (unigrams + bigrams)
+  -> Logistic Regression intent classifier
+  -> cosine-similarity check
+  -> local response from intents.json
+  -> display answer and append to CSV history
 ```
 
-### 4.2 Request Flow
+### 4.1 Request Flow
 
-1. The user enters a message in the chat interface.
-2. The client sends a JSON POST request to the `/chat` endpoint.
-3. The backend checks request frequency, API configuration, JSON structure and message content.
-4. The backend builds a system instruction, includes bounded recent history and appends the new user message.
-5. The backend sends the request to Groq using the configured model and server-side `GROQ_API_KEY`.
-6. The backend parses the generated content and returns a JSON reply.
-7. If the provider rejects the request or a network problem occurs, the backend logs safe diagnostics and returns a controlled error.
+1. The user enters a message.
+2. Text is lowercased and unsupported punctuation is removed.
+3. Tokenization extracts word tokens.
+4. TF-IDF converts the message into numeric features.
+5. Logistic Regression predicts an intent using labelled examples.
+6. Cosine similarity compares the message with training patterns.
+7. Low similarity triggers a fallback; otherwise a response is selected from the predicted intent.
+8. The answer is displayed and the exchange is written to local history when possible.
 
-### 4.3 Main Backend Components
+## 5. NLP Concepts
 
-| Component | Responsibility |
-|---|---|
-| Flask application | Defines service and chat routes. |
-| Request validation | Rejects empty, malformed or unsupported input. |
-| Rate limiting | Limits repeated requests from an IP within a rolling time window. |
-| Prompt/context builder | Adds the system instruction and bounded recent messages. |
-| Groq API client logic | Sends the HTTP request, reads the response and extracts the answer. |
-| Error handling | Handles HTTP errors, timeouts, connection errors and unreadable responses. |
-| Environment configuration | Reads `GROQ_API_KEY` and `GROQ_MODEL` from environment variables. |
+### 5.1 Normalization and Tokenization
 
-## 5. Implementation
+Normalization makes text consistent, for example “HELLO, Python!!” becomes “hello python”. Tokenization splits a sentence into units. “Hello NLP 101!” becomes ["hello", "nlp", "101"].
 
-### 5.1 Important Files and Settings
+### 5.2 TF-IDF
 
-| File / setting | Purpose |
-|---|---|
-| `server.py` | Flask backend, validation, rate limiting, provider call and error handling. |
-| `requirements.txt` | Lists Python packages required by the backend. |
-| `GROQ_API_KEY` | Secret API key stored in Render environment variables; never include the value in source code or this report. |
-| `GROQ_MODEL` | Model identifier configured in Render; currently reported as `openai/gpt-oss-120b`. |
-| GitHub repository | Stores version-controlled project source. |
-| Render service | Hosts the backend at https://campusbot-ai-backend.onrender.com. |
+TF-IDF means Term Frequency–Inverse Document Frequency. It converts phrases to weighted numeric vectors, assigning useful weights to terms that distinguish examples. This project uses unigrams and bigrams.
 
-### 5.2 API Endpoint
+### 5.3 Logistic Regression
 
-The `POST /chat` endpoint accepts a JSON object containing a message and optional history. A successful response contains a `reply` field. Invalid input and provider failures return a JSON error message with an appropriate HTTP status.
+Logistic Regression is a supervised classification algorithm. It is trained on example phrases labelled with intent tags. For a new message, it predicts one of the known intent classes; it does not create new facts or new intents automatically.
 
-Request example:
+### 5.4 Cosine Similarity
+
+Cosine similarity compares the direction of numeric vectors. CampusBot compares a message with stored examples and uses a threshold to reject very dissimilar input. This is a heuristic, not a guarantee of correctness.
+
+### 5.5 Intent Dataset
+
+Each item in intents.json contains a unique tag, sample patterns, and possible responses. New topics can be added by editing the dataset and restarting the application.
+
+## 6. Implementation
+
+CampusBot.py loads the dataset, normalizes and tokenizes example phrases, trains TF-IDF and Logistic Regression, and creates the Tkinter window. User messages are processed locally. No request is sent to Groq or another server. Conversation history is appended to chat_history.csv with a timestamp, user message, and response.
+
+Example dataset entry:
 
 ```json
 {
-  "message": "WHAT IS PYTHON?",
-  "history": []
+  "tag": "python_definition",
+  "patterns": ["what is python", "define python", "explain python"],
+  "responses": ["Python is a high-level, general-purpose programming language."]
 }
 ```
 
-Successful response shape:
+### 6.1 Run the Project
 
-```json
-{
-  "reply": "Python is a high-level programming language ..."
-}
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python CampusBot.py
 ```
 
-### 5.3 Prompt and Context Handling
+On Windows, run_gui.bat can launch the GUI after installing dependencies. Ensure Tkinter/Tcl-Tk is available.
 
-The system instruction asks the model to answer directly, understand common typing mistakes and follow-up questions, use examples when helpful, and avoid inventing changing facts. The backend accepts supported conversation roles and bounds the amount of recent history included in the request. This helps keep requests controlled but does not guarantee that every answer will be correct.
+## 7. Testing and Results
 
-### 5.4 API Error Handling
+| ID | Test | Expected behaviour |
+|---|---|---|
+| TC01 | Normalize uppercase text and punctuation | Consistent lowercase text |
+| TC02 | Tokenize a sentence | Expected word tokens |
+| TC03 | Ask “what is Python” | python_definition intent |
+| TC04 | Ask about NLP | nlp_definition intent |
+| TC05 | Ask about tokenization | Relevant local response |
+| TC06 | Empty input | Prompt to type a message |
+| TC07 | Unrelated question | Fallback response |
+| TC08 | Train a custom dataset | Sample maps to its intent |
+| TC09 | Save/read CSV history | Rows and headers are preserved |
 
-The backend handles common failures such as missing configuration, invalid input, rate limiting, authentication errors, forbidden requests, unavailable models, and connection or timeout failures. Provider diagnostics are written to application logs without logging the Authorization header or API key. During troubleshooting, Groq requests returned HTTP 403 with error code 1010. The backend was updated to log provider response details safely and to send an explicit `User-Agent` header.
+Run after installing requirements:
 
-## 6. Testing and Results
+```powershell
+python -m py_compile CampusBot.py tests/test_campusbot.py
+python -m unittest discover -s tests -v
+```
 
-### 6.1 Test Cases
+Record the actual test output after running the commands on the submission machine. Do not claim tests passed unless the run confirms it. The design demonstrates a workflow from raw text to a predicted intent and selected response. Prediction quality must be evaluated on held-out examples before making quantitative accuracy claims.
 
-| ID | Test | Expected behaviour | Result / evidence |
-|---|---|---|---|
-| TC01 | Send greeting: `HI` | A natural greeting reply is returned. | User-confirmed pass |
-| TC02 | Ask a general question: `WHAT` | An understandable AI-generated response is returned. | User-confirmed pass |
-| TC03 | Ask a question with spelling mistakes | Model attempts to infer intent and respond helpfully. | Test separately before claiming pass |
-| TC04 | Submit an empty message | Backend rejects the request with a readable validation error. | Verify in local or hosted test |
-| TC05 | Send malformed JSON | Backend returns a controlled client error. | Verify in local or hosted test |
-| TC06 | Exceed configured request rate | Backend returns a rate-limit error. | Verify in local or hosted test |
-| TC07 | Provider rejects a request | Backend logs safe diagnostics and returns a controlled error. | Observed during troubleshooting |
-| TC08 | Inspect API-key handling | Key remains in Render environment configuration. | Configuration requirement |
-| TC09 | Inspect backend health route | Health endpoint reports service status and key-configuration status. | Verify against current implementation |
+## 8. Privacy, Limitations and Future Scope
 
-### 6.2 Results and Discussion
+Messages are processed locally and are not uploaded to a remote API. Conversation history is stored in a local, unencrypted CSV file, so do not enter confidential information. The chatbot only recognises topics represented in its dataset; similar wording can be assigned to the wrong intent, and its responses are predefined rather than generated by a general language model. Future improvements include expanding examples, reporting precision/recall/F1 on held-out data, adding local FAQ retrieval, and comparing optional stemming or lemmatization.
 
-During deployment troubleshooting, Groq requests initially returned HTTP 403 with error code 1010. The backend was updated to log provider response details safely and to send an explicit `User-Agent` header. The user subsequently confirmed that the chatbot's replies were satisfactory. This is a user-confirmed functional smoke test, not a formal benchmark of accuracy, latency or availability.
+## 9. Conclusion
 
-### 6.3 Screenshots to Add Before Submission
-
-- Screenshot 1: CampusBot application open in a browser.
-- Screenshot 2: A successful greeting response.
-- Screenshot 3: A general question and the generated answer.
-- Screenshot 4: Render service showing the live deployment (hide secrets).
-- Screenshot 5: GitHub repository showing the final source files.
-
-## 7. Security, Limitations and Future Scope
-
-### 7.1 Security
-
-- Keep `GROQ_API_KEY` only in Render environment variables or a suitable secret manager.
-- Never commit API keys, private chat histories or credentials to GitHub.
-- Use HTTPS for communication with the hosted backend and provider.
-- Do not send passwords or sensitive personal information to the chatbot.
-- Review logs to ensure diagnostic messages never contain authorization headers or secrets.
-
-### 7.2 Limitations
-
-- Responses require internet access and availability of the Render service and Groq API.
-- Response quality depends on the selected model, prompt, context and provider service.
-- The chatbot does not guarantee factual correctness and should not be treated as an official source.
-- Live web search or verified college-document retrieval is not described as a current feature of this backend.
-- Response times can vary; no controlled latency benchmark has been recorded.
-
-### 7.3 Future Scope
-
-- Add verified retrieval from college documents and show citations to source material.
-- Measure request latency across repeated tests and report median and percentile timings.
-- Add automated integration tests for the backend's request validation and response parsing.
-- Consider response streaming to display partial output earlier.
-- Improve monitoring for uptime, API quota and provider errors.
-
-## 8. Conclusion
-
-CampusBot demonstrates how a Python Flask backend can integrate a hosted generative AI model through a chat API. The project includes request validation, limited conversation context, rate limiting, environment-based secret management and controlled error handling. The deployed application was confirmed by the user to produce satisfactory replies after troubleshooting the provider request. The system is a student prototype: users should verify important information, and the service depends on network access and provider availability.
+CampusBot demonstrates NLP through normalization, tokenization, TF-IDF feature extraction, Logistic Regression intent classification, and cosine-similarity checking. It uses a local JSON dataset and stores history in CSV. This configuration has no hosted AI backend or external API and can process messages offline after setup. Its coverage and accuracy depend on the quality of the labelled examples.
 
 ## References
 
-1. Groq, “API Reference — Chat Completions.” https://console.groq.com/docs/api-reference
-2. Groq, “Text Generation.” https://console.groq.com/docs/text-chat
-3. Groq, “Security Onboarding.” https://console.groq.com/docs/production-readiness/security-onboarding
-4. Python Software Foundation, “Python Documentation.” https://docs.python.org/3/
-5. Pallets Projects, “Flask Documentation.” https://flask.palletsprojects.com/
-6. GitHub, “GitHub Actions Documentation.” https://docs.github.com/actions
-7. Render, “Render Documentation.” https://render.com/docs
+1. Python Software Foundation, Python Documentation: https://docs.python.org/3/
+2. scikit-learn, Working With Text Data: https://scikit-learn.org/stable/tutorial/text_analytics/working_with_text_data.html
+3. scikit-learn, TfidfVectorizer: https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html
+4. scikit-learn, LogisticRegression: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+5. scikit-learn, cosine_similarity: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise.cosine_similarity.html
+6. Python Software Foundation, Tkinter: https://docs.python.org/3/library/tkinter.html
 
-## Appendix A — Run and Deployment Notes
+## Appendix A — Viva Questions
 
-The hosted backend base URL is https://campusbot-ai-backend.onrender.com. The `/health` endpoint reports backend health and whether the API key is configured, and `/chat` handles chat POST requests. For local execution, install packages listed in `requirements.txt`, set `GROQ_API_KEY` as an environment variable, set `GROQ_MODEL` if needed, and start the Flask application using the repository's documented command. Do not place the real API key in the report or commit it to source control.
-
-## Appendix B — Viva Questions
-
-1. What is a chatbot, and how does generative AI differ from a rule-based chatbot?
-2. What is Flask and why is it used in this project?
-3. What is a REST API?
-4. Why are HTTP and JSON used for client-server communication?
-5. What is the role of the Groq API?
-6. Why is `GROQ_API_KEY` stored as an environment variable?
-7. What is conversation history and why is it bounded?
-8. What is rate limiting?
-9. How are provider and network errors handled?
-10. Why can an AI answer be incorrect even when the request succeeds?
-11. What is the purpose of deployment on Render?
-12. What improvements could be added in a future version?
+1. What is Natural Language Processing?
+2. What is normalization?
+3. What is tokenization?
+4. What does TF-IDF stand for?
+5. Why use TF-IDF vectors?
+6. What is Logistic Regression?
+7. What is an intent?
+8. What does cosine similarity measure?
+9. Why use a fallback response?
+10. What is intents.json used for?
+11. How does this project differ from a Groq-powered chatbot?
+12. Why does it work offline after installation?
+13. What are the limitations of a predefined intent dataset?
+14. How can precision, recall, and F1-score evaluate a classifier?
