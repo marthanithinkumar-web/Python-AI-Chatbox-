@@ -2,203 +2,157 @@
 
 ## CampusBot — AI Chatbot Development Using Python and NLP
 
-**Course:** Essentials of Python Programming Laboratory (A9514)  
+**Course:** Essentials of Python Programming Laboratory  
 **Academic year:** 2026–2027  
 **Branch / year:** CSD, B.Tech II Year  
 **Student name:** Martha Nithin Kumar  
 **Roll number:** ____________________  
 **Batch / section:** ____________________  
-**Course instructor:** Mr. B. Nagulu, Assistant Professor, CSD  
+**Course instructor:** ____________________  
 **Institution:** Vardhaman College of Engineering
 
-> Fill in the roll number, batch/section, submission date, and any college-required fields before submitting.
+> Complete the roll number, batch/section, instructor, and submission details required by the college.
 
 ## Certificate
 
-This is to certify that the course end project entitled “CampusBot: AI Chatbot Development Using Python and NLP” has been carried out by Martha Nithin Kumar as part of the requirements for Essentials of Python Programming Laboratory (A9514) during the academic year 2026–2027.
+This is to certify that the course-end project entitled **“CampusBot: AI Chatbot Development Using Python and NLP”** is a work submitted by the student named above as part of the requirements for the Python Programming Laboratory course.
 
-Course Instructor: ____________________  
-Head of the Department: ____________________  
-Date: ____________________
-
-## Declaration
-
-I declare that this report describes the CampusBot project and its implementation to the best of my knowledge. External technical resources used for implementation are acknowledged in the references.
-
-Signature: ____________________  
-Date: ____________________
+**Faculty signature:** ____________________  
+**Date:** ____________________
 
 ## Acknowledgement
 
-I express my sincere gratitude to Mr. B. Nagulu, course instructor, and the Department of Computer Science and Engineering (Data Science), Vardhaman College of Engineering, for the guidance and opportunity to undertake this project.
+I thank my course instructor and the Department of Computer Science and Design for their guidance and support in completing this project. This project helped me apply Python programming, text processing, basic machine-learning methods, and software testing to a practical chatbot application.
 
 ## Abstract
 
-CampusBot is a desktop chatbot developed in Python to demonstrate fundamental Natural Language Processing techniques. The application uses Tkinter for its graphical interface and a local intent dataset stored in JSON. At startup, it normalizes and tokenizes example phrases, converts them into TF-IDF vectors using unigram and bigram features, and trains a Logistic Regression classifier to identify the likely intent of a user's message. Cosine similarity is used as an additional check against stored examples; when a message is too dissimilar, the chatbot returns a fallback message rather than pretending to understand. Replies are selected from responses defined for the predicted intent. Conversation exchanges can be saved to a local CSV file. This configuration does not use Groq, a hosted language model, Flask, or an external API, so chat processing can continue offline after Python and scikit-learn have been installed. The system is an educational intent-based chatbot, not a generative model. Its coverage depends on the quality and range of examples in the dataset. Unit tests cover preprocessing, intent prediction, fallback behaviour, and history storage.
+CampusBot is a desktop chatbot developed using Python and Natural Language Processing (NLP). Its main purpose is to demonstrate how a program can process a user's text, identify the likely meaning of a message, and provide a suitable response. The application uses text normalization and tokenization to prepare input, Term Frequency–Inverse Document Frequency (TF-IDF) to represent text as numerical features, and Logistic Regression to classify a message into an intent. Cosine similarity is used as an additional check so the local chatbot can respond cautiously when an input differs from its training examples. A Tkinter graphical interface allows the user to send messages, view replies, clear the current conversation, and view saved chat history. A compact training set is included in the Python source file, so a separate dataset file is not required. As an optional enhancement, the program can request a broader answer from Groq when a user supplies an API key through an environment variable. The main learning focus remains Python programming and NLP; the chatbot can still provide its local responses when the online service is not configured or is unavailable. The project demonstrates text preprocessing, feature extraction, classification, GUI programming, file handling, exception handling, and testing in one compact application.
 
-**Keywords:** Python, Natural Language Processing, TF-IDF, Logistic Regression, cosine similarity, Tkinter, chatbot, text classification.
+## Table of Contents
+
+1. Introduction  
+2. Objectives  
+3. Python and NLP Concepts  
+4. System Requirements  
+5. System Design and Workflow  
+6. Implementation  
+7. Testing  
+8. Results and Limitations  
+9. Conclusion  
+10. Future Scope  
+11. References
 
 ## 1. Introduction
 
-A chatbot communicates with users through natural language. Exact keyword systems may fail when users phrase questions differently. An NLP-based chatbot can represent example phrases numerically and classify messages into likely intents. CampusBot demonstrates this process with Python and scikit-learn in a small, explainable college project.
+A chatbot is a software application that communicates with users through natural-language messages. A basic chatbot can match a message to known examples and return a stored response. NLP provides techniques for preparing and representing text so a computer can classify or compare it. CampusBot demonstrates these ideas through a Python desktop application. The application uses a small set of labelled example phrases, learns to associate similar phrases with intents, and presents responses in a simple graphical interface.
 
-## 2. Problem Statement and Objectives
+## 2. Objectives
 
-### 2.1 Problem Statement
+- Develop a desktop chatbot using Python.
+- Apply text normalization and tokenization to user input.
+- Convert text into numerical features using TF-IDF.
+- Classify messages with Logistic Regression.
+- Use text similarity to reduce uncertain local matches.
+- Create a simple GUI using Tkinter.
+- Save and retrieve chat turns using CSV file handling.
+- Test normal input, known topics, empty messages, and unfamiliar questions.
+- Provide optional generative answers without making an external API the core of the project.
 
-Users express the same question in different ways. A chatbot that relies only on exact phrase matches may fail when wording changes. This project uses text features and a supervised classifier to map messages to known intents and uses similarity checking to provide a fallback for unrelated messages.
+## 3. Python and NLP Concepts
 
-### 2.2 Objectives
+### 3.1 Python
 
-- Build a desktop chatbot using Python and Tkinter.
-- Demonstrate text normalization and tokenization.
-- Represent text with TF-IDF unigram and bigram features.
-- Train a Logistic Regression model to classify intents.
-- Use cosine similarity to help detect out-of-scope messages.
-- Store patterns and responses in an editable JSON file.
-- Save conversation history locally in CSV format.
-- Test preprocessing, predictions, fallback behaviour, and history storage.
-- Avoid external AI APIs and hosted services.
+Python is the primary programming language for the project. Functions organize repeated tasks, classes group chatbot behavior, lists and dictionaries store training examples and responses, and exception handling manages failures. The standard-library modules support the GUI, JSON request formatting, CSV history, environment variables, threading, and HTTP communication.
 
-## 3. Requirements and Feasibility
+### 3.2 Text normalization
 
-| Component | Technology / purpose |
-|---|---|
-| Language | Python 3.10+ |
-| GUI | Tkinter |
-| Feature extraction | scikit-learn TfidfVectorizer |
-| Classifier | scikit-learn LogisticRegression |
-| Similarity | Cosine similarity |
-| Dataset | intents.json |
-| History | Local CSV |
-| Testing | Python unittest |
+Normalization converts input to lowercase, removes most punctuation, and reduces repeated whitespace. This helps treat phrases such as “HELLO!” and “hello” consistently.
 
-A regular laptop or desktop capable of running Python and a graphical desktop environment is sufficient. The project does not require a GPU or dedicated AI server. Install Python dependencies before first use; chat processing is local afterwards.
+### 3.3 Tokenization
 
-## 4. System Architecture
+Tokenization splits a text string into smaller units called tokens, usually words or numbers. Tokens provide the basic units used by the vectorizer.
 
-```text
-User
-  -> Tkinter desktop chat interface
-  -> text normalization and tokenization
-  -> TF-IDF vectorization (unigrams + bigrams)
-  -> Logistic Regression intent classifier
-  -> cosine-similarity check
-  -> local response from intents.json
-  -> display answer and append to CSV history
-```
+### 3.4 TF-IDF
 
-### 4.1 Request Flow
+TF-IDF stands for Term Frequency–Inverse Document Frequency. It represents each phrase as a numerical vector. Terms that help distinguish one phrase from the collection receive more useful weights. CampusBot uses unigram and bigram features so both individual words and adjacent word pairs can contribute.
 
-1. The user enters a message.
-2. Text is lowercased and unsupported punctuation is removed.
-3. Tokenization extracts word tokens.
-4. TF-IDF converts the message into numeric features.
-5. Logistic Regression predicts an intent using labelled examples.
-6. Cosine similarity compares the message with training patterns.
-7. Low similarity triggers a fallback; otherwise a response is selected from the predicted intent.
-8. The answer is displayed and the exchange is written to local history when possible.
+### 3.5 Intent classification
 
-## 5. NLP Concepts
+An intent is the likely purpose of a message, such as greeting, asking about Python, or asking about tokenization. Logistic Regression is trained on labelled phrases and predicts an intent for new input. The response associated with the predicted intent is then selected.
 
-### 5.1 Normalization and Tokenization
+### 3.6 Cosine similarity and fallback
 
-Normalization makes text consistent, for example “HELLO, Python!!” becomes “hello python”. Tokenization splits a sentence into units. “Hello NLP 101!” becomes ["hello", "nlp", "101"].
+Cosine similarity compares the direction of text vectors. CampusBot checks similarity against its stored examples and uses a cautious fallback when the message is blank, has no meaningful overlap, or is too dissimilar. This reduces incorrect matches but cannot eliminate them.
 
-### 5.2 TF-IDF
+### 3.7 Optional generative response
 
-TF-IDF means Term Frequency–Inverse Document Frequency. It converts phrases to weighted numeric vectors, assigning useful weights to terms that distinguish examples. This project uses unigrams and bigrams.
+When the environment variable GROQ_API_KEY is configured, the application can send the question and a limited amount of recent conversation context to Groq. This extends the range of questions the chatbot can answer. The API key is not stored in the source file. If the service fails, the program falls back to the local NLP response. This is an extension to the Python/NLP implementation, not the main subject of the project.
 
-### 5.3 Logistic Regression
+## 4. System Requirements
 
-Logistic Regression is a supervised classification algorithm. It is trained on example phrases labelled with intent tags. For a new message, it predicts one of the known intent classes; it does not create new facts or new intents automatically.
+**Hardware:** A standard desktop or laptop computer.
 
-### 5.4 Cosine Similarity
+**Software:** Python 3.10 or later, Tkinter (included with most standard Windows Python installations), and scikit-learn. Internet access and a Groq API key are optional and are only needed for online generative answers.
 
-Cosine similarity compares the direction of numeric vectors. CampusBot compares a message with stored examples and uses a threshold to reject very dissimilar input. This is a heuristic, not a guarantee of correctness.
+## 5. System Design and Workflow
 
-### 5.5 Intent Dataset
+**Workflow:** User message → text normalization → tokenization → TF-IDF vectorization → Logistic Regression intent prediction → cosine-similarity check → local response. If the optional Groq feature is configured, a generated answer is tried first; otherwise or on failure, the local NLP path is used.
 
-Each item in intents.json contains a unique tag, sample patterns, and possible responses. New topics can be added by editing the dataset and restarting the application.
+The graphical interface is built with Tkinter. A worker thread handles the answer request so the interface remains responsive. Chat turns are appended to a local CSV file and can be displayed later.
 
 ## 6. Implementation
 
-CampusBot.py loads the dataset, normalizes and tokenizes example phrases, trains TF-IDF and Logistic Regression, and creates the Tkinter window. User messages are processed locally. No request is sent to Groq or another server. Conversation history is appended to chat_history.csv with a timestamp, user message, and response.
+The project is intentionally kept in one main source file, CampusBot.py. The training examples are embedded in the file to avoid a separate data file. The NLPChatbot class builds the TF-IDF representation and trains the Logistic Regression classifier at startup. The normalize_text and tokenize functions prepare input. The predict_intent method predicts a label and similarity score, while local_response selects a stored response or returns an uncertainty message. The generate_response function optionally uses Groq and falls back to local NLP. The Tkinter GUI accepts messages, displays replies, and provides conversation and history controls.
 
-Example dataset entry:
+### Algorithm
 
-```json
-{
-  "tag": "python_definition",
-  "patterns": ["what is python", "define python", "explain python"],
-  "responses": ["Python is a high-level, general-purpose programming language."]
-}
-```
+1. Start the application and load the embedded training examples.
+2. Normalize and tokenize the training phrases.
+3. Build TF-IDF features and train the intent classifier.
+4. Display the chat window.
+5. Read a user's message and validate that it is not empty.
+6. If Groq is configured, request a generated answer with recent context.
+7. If online generation is unavailable or fails, process the message with local NLP.
+8. Compare text similarity and choose a stored response or an uncertainty fallback.
+9. Display the response and save the conversation turn in CSV format.
+10. Continue until the user closes the application.
 
-### 6.1 Run the Project
+## 7. Testing
 
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python CampusBot.py
-```
-
-On Windows, run_gui.bat can launch the GUI after installing dependencies. Ensure Tkinter/Tcl-Tk is available.
-
-## 7. Testing and Results
-
-| ID | Test | Expected behaviour |
+| Test | Input or action | Expected result |
 |---|---|---|
-| TC01 | Normalize uppercase text and punctuation | Consistent lowercase text |
-| TC02 | Tokenize a sentence | Expected word tokens |
-| TC03 | Ask “what is Python” | python_definition intent |
-| TC04 | Ask about NLP | nlp_definition intent |
-| TC05 | Ask about tokenization | Relevant local response |
-| TC06 | Empty input | Prompt to type a message |
-| TC07 | Unrelated question | Fallback response |
-| TC08 | Train a custom dataset | Sample maps to its intent |
-| TC09 | Save/read CSV history | Rows and headers are preserved |
+| Text normalization | Mixed case and punctuation | Lowercase, cleaned text |
+| Tokenization | “Hello NLP 101!” | Word tokens are returned |
+| Known intent | “What is Python?” | Python-related intent and response |
+| NLP concept | “Explain tokenization” | Tokenization explanation |
+| Empty input | Blank message | Request to enter a question |
+| Unknown input | Unrelated phrase | Cautious fallback rather than a confident unrelated answer |
+| Offline/local mode | No GROQ_API_KEY | Local NLP response path works |
+| Chat history | Send messages and reopen history | Turns are stored and readable |
+| Online service error | Invalid key or unavailable service | App does not crash; local fallback is attempted |
 
-Run after installing requirements:
+Automated tests are stored in tests/test_campusbot.py. Run them with: python -m unittest discover -s tests -v
 
-```powershell
-python -m py_compile CampusBot.py tests/test_campusbot.py
-python -m unittest discover -s tests -v
-```
+## 8. Results and Limitations
 
-Record the actual test output after running the commands on the submission machine. Do not claim tests passed unless the run confirms it. The design demonstrates a workflow from raw text to a predicted intent and selected response. Prediction quality must be evaluated on held-out examples before making quantitative accuracy claims.
-
-## 8. Privacy, Limitations and Future Scope
-
-Messages are processed locally and are not uploaded to a remote API. Conversation history is stored in a local, unencrypted CSV file, so do not enter confidential information. The chatbot only recognises topics represented in its dataset; similar wording can be assigned to the wrong intent, and its responses are predefined rather than generated by a general language model. Future improvements include expanding examples, reporting precision/recall/F1 on held-out data, adding local FAQ retrieval, and comparing optional stemming or lemmatization.
+CampusBot demonstrates a working Python GUI and a local NLP pipeline using text preprocessing, TF-IDF, intent classification, similarity checking, and stored responses. It also demonstrates local CSV persistence and graceful fallback behavior. The local model only knows the topics represented by its compact training examples, so it cannot answer every possible question. Classification quality depends on the examples and similarity threshold. Groq answers require internet access, a valid key, model availability, and applicable quota. Generated responses may still be incorrect and should be checked for important decisions.
 
 ## 9. Conclusion
 
-CampusBot demonstrates NLP through normalization, tokenization, TF-IDF feature extraction, Logistic Regression intent classification, and cosine-similarity checking. It uses a local JSON dataset and stores history in CSV. This configuration has no hosted AI backend or external API and can process messages offline after setup. Its coverage and accuracy depend on the quality of the labelled examples.
+The project applies core Python programming and introductory NLP concepts to a practical chatbot. It shows how raw text is normalized, tokenized, transformed into numerical features, classified, and mapped to a response. The Tkinter interface and CSV history add practical application features, while the optional online component illustrates how an existing Python program can be extended without replacing the NLP learning objective.
 
-## References
+## 10. Future Scope
 
-1. Python Software Foundation, Python Documentation: https://docs.python.org/3/
-2. scikit-learn, Working With Text Data: https://scikit-learn.org/stable/tutorial/text_analytics/working_with_text_data.html
-3. scikit-learn, TfidfVectorizer: https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html
-4. scikit-learn, LogisticRegression: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
-5. scikit-learn, cosine_similarity: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.pairwise.cosine_similarity.html
-6. Python Software Foundation, Tkinter: https://docs.python.org/3/library/tkinter.html
+- Expand and evaluate the training phrases with a balanced dataset.
+- Measure intent-classification accuracy, precision, and recall.
+- Add stemming or lemmatization and compare results.
+- Improve context handling and local retrieval.
+- Add a more detailed evaluation set for unfamiliar and misspelled queries.
+- Improve accessibility and GUI layout.
 
-## Appendix A — Viva Questions
+## 11. References
 
-1. What is Natural Language Processing?
-2. What is normalization?
-3. What is tokenization?
-4. What does TF-IDF stand for?
-5. Why use TF-IDF vectors?
-6. What is Logistic Regression?
-7. What is an intent?
-8. What does cosine similarity measure?
-9. Why use a fallback response?
-10. What is intents.json used for?
-11. How does this project differ from a Groq-powered chatbot?
-12. Why does it work offline after installation?
-13. What are the limitations of a predefined intent dataset?
-14. How can precision, recall, and F1-score evaluate a classifier?
+1. Python documentation: https://docs.python.org/3/
+2. scikit-learn documentation: https://scikit-learn.org/stable/
+3. Natural Language Toolkit book (NLP concepts): https://www.nltk.org/book/
+4. Groq documentation (optional integration): https://console.groq.com/docs

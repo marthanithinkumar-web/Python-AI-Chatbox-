@@ -1,69 +1,49 @@
-# CampusBot — Python + NLP Chatbot
+# CampusBot — Python and NLP Chatbot
 
-CampusBot is a local desktop chatbot built with Python, Tkinter, and classical Natural Language Processing. It uses TF-IDF features and Logistic Regression to classify a message into an intent, checks similarity against known examples, and chooses a response from a local dataset.
+CampusBot is a single-file desktop chatbot project built mainly to demonstrate Python programming and Natural Language Processing (NLP).
 
-**No Groq, hosted language model, Flask backend, API key, or internet connection is needed while chatting.** Install the Python dependency once first.
-
-## Features
-
-- Desktop chat interface with Send and Enter-to-send
+## Main features
 - Text normalization and tokenization
-- TF-IDF vectorization with unigram and bigram features
+- TF-IDF text vectorization (unigrams and bigrams)
 - Logistic Regression intent classification
-- Cosine-similarity check and fallback for unknown questions
-- Editable intent and response dataset in intents.json
-- Local CSV conversation history
-- No remote service or secret key
-- Unit tests
+- Cosine-similarity check and a cautious unknown-question fallback
+- Tkinter desktop interface
+- CSV chat history
+- Optional Groq-generated answers for broader questions
+- Local NLP responses remain available if Groq is not configured or is unavailable
 
 ## Requirements
-
-- Python 3.10 or newer
-- Tkinter (normally included with Windows Python; ensure Tcl/Tk is selected)
-- scikit-learn and its dependencies
+- Python 3.10+
+- scikit-learn
+- Tkinter (normally included with Windows Python)
 
 ## Run on Windows
+1. Install Python and select the option to add Python to PATH.
+2. Open Command Prompt or PowerShell in this repository folder.
+3. Install the dependency: python -m pip install -r requirements.txt
+4. Start the app: python CampusBot.py
 
-Open PowerShell in the repository folder:
+You can also double-click run_gui.bat.
 
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+## Optional Groq mode
+The project is designed to work locally without an API key. To enable broader online answers, set GROQ_API_KEY in your environment before starting the app. Never paste the key into CampusBot.py or commit it to GitHub.
+
+PowerShell (current terminal only):
+$env:GROQ_API_KEY="your-key-here"
 python CampusBot.py
-```
 
-If PowerShell blocks activation, use Command Prompt and run `.venv\Scripts\activate.bat`, or install packages without activating a virtual environment. You can also double-click run_gui.bat after installing requirements.
+The default model is openai/gpt-oss-120b. If needed, set GROQ_MODEL to another model available to your Groq account. Online answers require internet access and depend on provider availability and quota. When the request fails, CampusBot tries its local NLP response instead.
 
-## How the NLP pipeline works
-
-1. Normalize: lowercase text and remove unsupported punctuation.
-2. Tokenize: split the message into word tokens.
-3. Vectorize: convert example phrases into TF-IDF vectors using unigrams and bigrams.
-4. Classify intent: Logistic Regression predicts a label such as greeting, python_definition, or nlp_definition.
-5. Check similarity: cosine similarity compares the new message to training examples. Low similarity triggers a fallback.
-6. Respond: choose a response from the matching intent in intents.json.
-
-The model trains from the local JSON dataset when the app starts. It does not generate new knowledge like a large language model. Coverage depends on the examples, so add varied phrasings and test unfamiliar questions.
-
-## Teach CampusBot new topics
-
-Edit intents.json. Each intent needs a unique tag, a list of patterns, and a list of responses. Add the intent to the top-level intents array, then restart CampusBot so it retrains the model. Use many natural phrasings per intent and avoid identical patterns assigned to different labels.
+## Project structure
+- CampusBot.py — application, embedded training examples, NLP pipeline, GUI, optional Groq call, and CSV history
+- requirements.txt — required Python package
+- tests/test_campusbot.py — automated tests
+- run_gui.bat — Windows launch helper
+- run_tests.bat — Windows test helper
+- PROJECT_REPORT.md — report focused on Python and NLP
 
 ## Tests
-
-```powershell
-python -m py_compile CampusBot.py tests/test_campusbot.py
+Run:
 python -m unittest discover -s tests -v
-```
 
-Tests check preprocessing, known-intent predictions, fallback behaviour, and CSV history. Run them where requirements.txt has been installed.
-
-## Project report
-
-See PROJECT_REPORT.md. Fill in roll number, batch/section, date, and other college-required fields before submitting.
-
-## Privacy and limitations
-
-Messages and replies are saved to chat_history.csv beside the program. The file is local and not encrypted; do not enter confidential information. CampusBot does not upload messages. It is an educational intent-classification project, not a general-purpose generative AI assistant; it may misunderstand out-of-scope questions.
+The local NLP pipeline is educational and has limited coverage because its training set is intentionally compact. Optional generated answers can be wrong; verify important information.
