@@ -173,7 +173,7 @@ def groq_response(text: str, history: list[dict[str, str]] | None = None) -> str
         if item.get("user") and item.get("bot"):
             messages.append({"role": "user", "content": item["user"][:1500]})
             messages.append({"role": "assistant", "content": item["bot"][:2500]})
-    messages.append({"role": "user", "content": text[:4000])
+    messages.append({"role": "user", "content": text[:4000]})
     payload = json.dumps({
         "model": DEFAULT_MODEL,
         "messages": messages,
