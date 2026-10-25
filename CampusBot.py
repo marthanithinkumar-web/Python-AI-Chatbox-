@@ -128,13 +128,17 @@ def analyze_text(text: str) -> dict[str, str]:
     ranked_tokens = sorted(frequency, key=lambda token: (-frequency[token], normalized.find(token)))
     keywords = list(dict.fromkeys(ranked_phrases + ranked_tokens))[:8]
 
+    # NLP is optional analysis: missing/edited intent dictionaries must never
+    # prevent a message from reaching the AI backend or hide a valid AI reply.
+    phrase_rules = globals().get("INTENT_PHRASES", {})
+    keyword_rules = globals().get("INTENT_KEYWORDS", {})
     phrase_intents = [
-        intent for intent, phrases in INTENT_PHRASES.items()
+        intent for intent, phrases in phrase_rules.items()
         if any(phrase in normalized for phrase in phrases)
     ]
     scores = {
         intent: sum(token in words for token in tokens)
-        for intent, words in INTENT_KEYWORDS.items()
+        for intent, words in keyword_rules.items()
     }
     if "troubleshooting" in phrase_intents:
         intent = "troubleshooting"
@@ -145,14 +149,18 @@ def analyze_text(text: str) -> dict[str, str]:
         if scores[intent] == 0:
             intent = "question" if "?" in text or (tokens and tokens[0] in QUESTION_STARTERS) else "general"
 
+    positive_words = globals().get("POSITIVE_WORDS", set())
+    negative_words = globals().get("NEGATIVE_WORDS", set())
+    negation_words = globals().get("NEGATION_WORDS", set())
+    intensifiers = globals().get("INTENSIFIERS", set())
     positive = negative = 0
     for index, token in enumerate(tokens):
-        if token in POSITIVE_WORDS or token in NEGATIVE_WORDS:
+        if token in positive_words or token in negative_words:
             previous = tokens[max(0, index - 3):index]
-            negated = any(word in NEGATION_WORDS for word in previous)
-            intensified = any(word in INTENSIFIERS for word in tokens[max(0, index - 2):index])
+            negated = any(word in negation_words for word in previous)
+            intensified = any(word in intensifiers for word in tokens[max(0, index - 2):index])
             weight = 2 if intensified else 1
-            is_positive = token in POSITIVE_WORDS
+            is_positive = token in positive_words
             if negated:
                 is_positive = not is_positive
             if is_positive:
@@ -221,7 +229,17 @@ def generate_response(
 
 def append_chat(user_message: str, bot_message: str) -> None:
     """Save a chat exchange and local NLP features, preserving older CSV rows."""
-    nlp = analyze_text(user_message)
+    # Persist the conversation even if local NLP rules were removed or damaged.
+    try:
+        nlp = analyze_text(user_message)
+    except Exception:
+        nlp = {
+            "nlp_tokens": "",
+            "nlp_keywords": "",
+            "nlp_intent": "general",
+            "nlp_question_type": "statement/request",
+            "nlp_sentiment": "neutral",
+        }
     exists = HISTORY_FILE.exists() and HISTORY_FILE.stat().st_size > 0
     if exists:
         with HISTORY_FILE.open("r", newline="", encoding="utf-8") as handle:
@@ -384,7 +402,9 @@ def run_gui() -> None:
                 # A local history write failure must not discard a valid AI reply.
                 try:
                     append_chat(message, reply)
-                except OSError:
+                except Exception:
+                    # NLP/CSV logging is auxiliary; never discard a valid AI reply
+                    # because local analysis or chat-history persistence failed.
                     pass
                 self.results.put(("ok", reply, add_turn(previous, message, reply)))
             except Exception as exc:
