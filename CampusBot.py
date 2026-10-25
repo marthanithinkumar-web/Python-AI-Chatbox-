@@ -144,10 +144,11 @@ def analyze_text(text: str) -> dict[str, str]:
         intent = "troubleshooting"
     elif phrase_intents:
         intent = phrase_intents[0]
-    else:
+    elif scores and max(scores.values(), default=0) > 0:
         intent = max(scores, key=scores.get)
-        if scores[intent] == 0:
-            intent = "question" if "?" in text or (tokens and tokens[0] in QUESTION_STARTERS) else "general"
+    else:
+        # Empty/missing intent rules are valid: classify generically and continue.
+        intent = "question" if "?" in text or (tokens and tokens[0] in QUESTION_STARTERS) else "general"
 
     positive_words = globals().get("POSITIVE_WORDS", set())
     negative_words = globals().get("NEGATIVE_WORDS", set())
