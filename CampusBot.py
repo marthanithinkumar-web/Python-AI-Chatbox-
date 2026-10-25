@@ -1,8 +1,5 @@
 """CampusBot — standalone Tkinter desktop AI chatbot.
-
-Requirements: Python 3.10+, Tkinter, and internet for shared live AI.
-The shared backend is the default; friends do not need a Gemini API key.
-No third-party Python packages are required for the desktop client.
+   Requirements: Python 3.10+, Tkinter, and internet for shared live AI.
 """
 from __future__ import annotations
 
@@ -26,18 +23,10 @@ BACKEND_URL = os.getenv(
 HISTORY_FILE = Path(__file__).with_name("chat_history.csv")
 HISTORY_FIELDS = ["timestamp", "user", "bot", "nlp_tokens", "nlp_keywords", "nlp_intent", "nlp_question_type", "nlp_sentiment"]
 
-
-
 # Lightweight, dependency-free NLP for local message analysis.
-# It never rewrites the message sent to the AI backend or changes the GUI.
 NLP_STOP_WORDS = {
-    "a", "an", "the", "and", "or", "but", "if", "to", "of", "in", "on",
-    "at", "for", "from", "by", "with", "is", "am", "are", "was", "were",
-    "be", "been", "do", "does", "did", "can", "could", "would", "should",
-    "will", "i", "me", "my", "we", "our", "you", "your", "he", "she",
-    "it", "they", "them", "this", "that", "these", "those", "what", "when",
-    "where", "why", "how", "who", "which", "please", "just", "also", "have",
-    "has", "had",
+    "a", "an", "the","it", "they", "them", "this", "that", "these", "those", "what", "when",
+    "where", "why", "how", "who", "which", "please", "just", "also", "have","has", "had",
 }
 POSITIVE_WORDS = {
     "good", "great", "happy", "love", "helpful", "thanks", "excellent",
@@ -51,42 +40,14 @@ NEGATION_WORDS = {"not", "no", "never", "cannot", "can't", "don't", "doesn't", "
 INTENSIFIERS = {"very", "really", "extremely", "too", "absolutely"}
 INTENT_PHRASES = {
     "greeting": {"good morning", "good afternoon", "good evening", "how are you"},
-    "farewell": {"see you", "good night", "talk later", "exit chat"},
-    "thanks": {"thank you", "thanks a lot", "much appreciated", "that helped"},
-    "troubleshooting": {"not working", "does not work", "how to fix", "error message", "failed to run"},
-    "summarization": {"summarize this", "summary of", "in short", "key points"},
-    "translation": {"translate to", "translate into", "in english", "in hindi", "meaning of"},
-    "recommendation": {"recommend me", "suggest some", "which is best", "best option"},
     "python_topic": {"what is python", "python programming", "why use python"},
     "variables": {"what is a variable", "python variables", "create a variable"},
     "loops": {"what is a loop", "for loop", "while loop", "difference between for and while"},
     "functions": {"what is a function", "define a function", "python def example"},
     "lists": {"what is a list", "python list example", "add an item to a list"},
     "nlp_topic": {"what is nlp", "natural language processing", "nlp full form"},
-    "tokenization": {"what is tokenization", "tokens in nlp", "split text into words"},
-    "tfidf": {"what is tf-idf", "explain tfidf", "inverse document frequency"},
-    "classification": {"text classification", "logistic regression", "intent classification"},
-    "similarity": {"cosine similarity", "text similarity"},
-    "project": {"explain this project", "how does campusbot work", "project architecture"},
-    "study_tips": {"study tips", "prepare for exams", "study better"},
-    "help": {"what topics do you know", "what can i ask", "show example questions"},
-    "explanation": {"what is", "what are", "how does", "how do", "explain to me", "difference between"},
-}
-# Broad fallback categories only; specific topics are matched by INTENT_PHRASES.
-INTENT_KEYWORDS = {
-    "greeting": {"hello", "hi", "hey"},
-    "farewell": {"bye", "goodbye", "exit"},
-    "thanks": {"thanks", "thank", "appreciate"},
-    "coding_help": {"python", "code", "coding", "program", "bug", "error", "api", "sql", "java"},
-    "study_help": {"study", "exam", "college", "assignment", "project", "learn", "lab", "notes"},
-    "troubleshooting": {"fix", "broken", "failed", "issue", "problem", "crash", "wrong"},
-    "summarization": {"summarize", "summary", "shorten", "brief"},
-    "translation": {"translate", "translation", "language", "meaning"},
-    "recommendation": {"recommend", "suggest", "choose", "compare", "best"},
-    "explanation": {"explain", "define", "definition", "difference", "describe"},
 }
 QUESTION_STARTERS = {"who", "what", "when", "where", "why", "how", "which"}
-
 
 def analyze_text(text: str) -> dict[str, str]:
     """Extract meaningful tokens, key phrases, intent, question type, and sentiment."""
