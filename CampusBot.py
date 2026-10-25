@@ -100,7 +100,7 @@ class NLPChatbot:
             return "Please type a question so I can try to help."
         tag, similarity, _ = self.predict_intent(cleaned)
         # Threshold prevents unrelated questions from being confidently misclassified.
-        if tag is None or similarity < 0.16:
+        if tag is None or similarity < 0.32:
             return (
                 "I'm not confident I understood that yet. Try rephrasing your question, "
                 "or add more examples to intents.json so I can learn that topic."
