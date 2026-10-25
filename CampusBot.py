@@ -10,6 +10,8 @@ import csv
 import json
 import os
 import queue
+import re
+import unicodedata
 import threading
 import urllib.error
 import urllib.request
@@ -22,7 +24,134 @@ BACKEND_URL = os.getenv(
     "https://campusbot-ai-backend.onrender.com",
 ).strip()
 HISTORY_FILE = Path(__file__).with_name("chat_history.csv")
-HISTORY_FIELDS = ["timestamp", "user", "bot"]
+HISTORY_FIELDS = ["timestamp", "user", "bot", "nlp_tokens", "nlp_keywords", "nlp_intent", "nlp_question_type", "nlp_sentiment"]
+
+
+
+# Lightweight, dependency-free NLP for local message analysis.
+# It never rewrites the message sent to the AI backend or changes the GUI.
+NLP_STOP_WORDS = {
+    "a", "an", "the", "and", "or", "but", "if", "then", "than", "to",
+    "of", "in", "on", "at", "for", "from", "by", "with", "about", "as",
+    "is", "am", "are", "was", "were", "be", "been", "being", "do", "does",
+    "did", "can", "could", "would", "should", "will", "i", "me", "my",
+    "we", "our", "you", "your", "he", "she", "it", "they", "them", "this",
+    "that", "these", "those", "what", "when", "where", "why", "how", "who",
+    "which", "please", "just", "also", "very", "there", "here", "have", "has",
+    "had", "into", "up", "out", "tell", "explain", "give", "make", "want",
+    "need", "like", "us", "yourself", "myself", "their", "its",
+}
+POSITIVE_WORDS = {
+    "good", "great", "excellent", "happy", "love", "helpful", "thanks", "thank",
+    "awesome", "nice", "perfect", "amazing", "wonderful", "easy", "clear", "best",
+    "success", "successful", "correct", "working", "improve", "improved",
+}
+NEGATIVE_WORDS = {
+    "bad", "poor", "sad", "angry", "hate", "broken", "error", "failed", "failure",
+    "problem", "issue", "wrong", "terrible", "frustrated", "confusing", "difficult",
+    "hard", "slow", "crash", "crashed", "bug", "useless", "incorrect", "unable",
+}
+NEGATION_WORDS = {"not", "no", "never", "neither", "hardly", "cannot", "can't", "dont", "don't", "isnt", "isn't", "wasnt", "wasn't"}
+INTENSIFIERS = {"very", "really", "extremely", "so", "too", "absolutely", "super"}
+INTENT_PHRASES = {
+    "greeting": {"good morning", "good afternoon", "good evening", "how are you"},
+    "farewell": {"see you", "see you later", "good night", "talk later"},
+    "thanks": {"thank you", "thanks a lot", "much appreciated"},
+    "troubleshooting": {"not working", "does not work", "doesn't work", "how to fix", "fix this", "error message", "keep crashing", "failed to run"},
+    "summarization": {"summarize this", "summary of", "in short", "key points"},
+    "translation": {"translate to", "translate into", "in english", "in hindi", "meaning of"},
+    "recommendation": {"recommend me", "suggest some", "which is best", "best option", "what should i choose"},
+    "explanation": {"what is", "what are", "how does", "how do", "explain to me", "difference between", "meaning of"},
+}
+INTENT_KEYWORDS = {
+    "greeting": {"hello", "hi", "hey", "greetings"},
+    "farewell": {"bye", "goodbye", "farewell", "later"},
+    "thanks": {"thanks", "thank", "appreciate"},
+    "coding_help": {"python", "code", "coding", "program", "bug", "error", "debug", "function", "api", "sql", "html", "javascript", "java", "compile", "exception", "traceback", "database", "query"},
+    "study_help": {"study", "exam", "college", "assignment", "project", "subject", "learn", "homework", "syllabus", "lab", "semester", "definition", "notes"},
+    "troubleshooting": {"fix", "broken", "failed", "failure", "issue", "problem", "crash", "crashed", "error", "wrong", "unable"},
+    "summarization": {"summarize", "summary", "summarise", "summarising", "summarizing", "shorten", "brief", "keypoints"},
+    "translation": {"translate", "translation", "translated", "language", "meaning"},
+    "recommendation": {"recommend", "recommendation", "suggest", "suggestion", "choose", "compare", "best", "options"},
+    "explanation": {"explain", "define", "definition", "meaning", "difference", "describe"},
+}
+QUESTION_STARTERS = {"who", "what", "when", "where", "why", "how", "which", "whose", "whom"}
+
+
+def analyze_text(text: str) -> dict[str, str]:
+    """Extract meaningful tokens, key phrases, intent, question type, and sentiment."""
+    normalized = unicodedata.normalize("NFKC", text).casefold().strip()
+    tokens = re.findall(r"[^\\W_]+(?:['’][^\\W_]+)?", normalized, flags=re.UNICODE)
+    tokens = [token.replace("’", "'") for token in tokens]
+    meaningful = [
+        token for token in tokens
+        if token not in NLP_STOP_WORDS and token not in {"don't", "doesn't", "isn't", "can't", "won't"}
+        and len(token) > 1
+    ]
+
+    frequency: dict[str, int] = {}
+    for token in meaningful:
+        frequency[token] = frequency.get(token, 0) + 1
+    phrase_candidates = [
+        f"{left} {right}" for left, right in zip(tokens, tokens[1:])
+        if left not in NLP_STOP_WORDS and right not in NLP_STOP_WORDS
+        and len(left) > 1 and len(right) > 1
+    ]
+    unique_phrases = list(dict.fromkeys(phrase_candidates))
+    ranked_phrases = sorted(
+        unique_phrases,
+        key=lambda phrase: (-phrase_candidates.count(phrase), normalized.find(phrase)),
+    )
+    ranked_tokens = sorted(frequency, key=lambda token: (-frequency[token], normalized.find(token)))
+    keywords = list(dict.fromkeys(ranked_phrases + ranked_tokens))[:8]
+
+    phrase_intents = [
+        intent for intent, phrases in INTENT_PHRASES.items()
+        if any(phrase in normalized for phrase in phrases)
+    ]
+    scores = {
+        intent: sum(token in words for token in tokens)
+        for intent, words in INTENT_KEYWORDS.items()
+    }
+    if "troubleshooting" in phrase_intents:
+        intent = "troubleshooting"
+    elif phrase_intents:
+        intent = phrase_intents[0]
+    else:
+        intent = max(scores, key=scores.get)
+        if scores[intent] == 0:
+            intent = "question" if "?" in text or (tokens and tokens[0] in QUESTION_STARTERS) else "general"
+
+    positive = negative = 0
+    for index, token in enumerate(tokens):
+        if token in POSITIVE_WORDS or token in NEGATIVE_WORDS:
+            previous = tokens[max(0, index - 3):index]
+            negated = any(word in NEGATION_WORDS for word in previous)
+            intensified = any(word in INTENSIFIERS for word in tokens[max(0, index - 2):index])
+            weight = 2 if intensified else 1
+            is_positive = token in POSITIVE_WORDS
+            if negated:
+                is_positive = not is_positive
+            if is_positive:
+                positive += weight
+            else:
+                negative += weight
+    sentiment = "positive" if positive > negative else "negative" if negative > positive else "neutral"
+
+    first = tokens[0] if tokens else ""
+    question_types = {
+        "what": "definition/information", "who": "person", "when": "time/date",
+        "where": "location", "why": "reason", "how": "method/process",
+        "which": "choice/comparison", "whose": "ownership", "whom": "person",
+    }
+    question_type = question_types.get(first, "yes/no or general question" if "?" in text else "statement/request")
+    return {
+        "nlp_tokens": " ".join(meaningful[:30]),
+        "nlp_keywords": ", ".join(keywords),
+        "nlp_intent": intent,
+        "nlp_question_type": question_type,
+        "nlp_sentiment": sentiment,
+    }
 
 
 def generate_response(
@@ -68,8 +197,20 @@ def generate_response(
 
 
 def append_chat(user_message: str, bot_message: str) -> None:
-    """Append one completed exchange to the local CSV history."""
+    """Save a chat exchange and local NLP features, preserving older CSV rows."""
+    nlp = analyze_text(user_message)
     exists = HISTORY_FILE.exists() and HISTORY_FILE.stat().st_size > 0
+    if exists:
+        with HISTORY_FILE.open("r", newline="", encoding="utf-8") as handle:
+            reader = csv.DictReader(handle)
+            old_fields = reader.fieldnames or []
+            old_rows = list(reader)
+        if old_fields != HISTORY_FIELDS:
+            with HISTORY_FILE.open("w", newline="", encoding="utf-8") as handle:
+                writer = csv.DictWriter(handle, fieldnames=HISTORY_FIELDS)
+                writer.writeheader()
+                for old_row in old_rows:
+                    writer.writerow({field: old_row.get(field, "") for field in HISTORY_FIELDS})
     with HISTORY_FILE.open("a", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=HISTORY_FIELDS)
         if not exists:
@@ -78,8 +219,8 @@ def append_chat(user_message: str, bot_message: str) -> None:
             "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "user": user_message,
             "bot": bot_message,
+            **nlp,
         })
-
 
 def read_history() -> list[dict[str, str]]:
     """Read locally saved exchanges."""
