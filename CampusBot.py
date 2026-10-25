@@ -32,30 +32,28 @@ HISTORY_FIELDS = ["timestamp", "user", "bot", "nlp_tokens", "nlp_keywords", "nlp
 # It never rewrites the message sent to the AI backend or changes the GUI.
 NLP_STOP_WORDS = {
     "a", "an", "the", "and", "or", "but", "if", "to", "of", "in", "on",
-    "at", "for", "from", "by", "with", "as", "is", "am", "are", "was",
-    "were", "be", "been", "being", "do", "does", "did", "can", "could",
-    "would", "should", "will", "i", "me", "my", "we", "our", "you",
-    "your", "he", "she", "it", "they", "them", "this", "that", "these",
-    "those", "what", "when", "where", "why", "how", "who", "which",
-    "please", "just", "also", "have", "has", "had", "up", "out",
+    "at", "for", "from", "by", "with", "is", "am", "are", "was", "were",
+    "be", "been", "do", "does", "did", "can", "could", "would", "should",
+    "will", "i", "me", "my", "we", "our", "you", "your", "he", "she",
+    "it", "they", "them", "this", "that", "these", "those", "what", "when",
+    "where", "why", "how", "who", "which", "please", "just", "also", "have",
+    "has", "had",
 }
 POSITIVE_WORDS = {
-    "good", "great", "excellent", "happy", "love", "helpful", "thanks",
-    "awesome", "nice", "perfect", "amazing", "clear", "success", "correct",
-    "working", "improve",
+    "good", "great", "happy", "love", "helpful", "thanks", "excellent",
+    "perfect", "clear", "success", "correct", "working",
 }
 NEGATIVE_WORDS = {
-    "bad", "poor", "sad", "angry", "hate", "broken", "error", "failed",
-    "failure", "problem", "issue", "wrong", "terrible", "confusing",
-    "difficult", "slow", "crash", "bug", "incorrect", "unable",
+    "bad", "poor", "hate", "broken", "error", "failed", "problem", "issue",
+    "wrong", "terrible", "confusing", "difficult", "slow", "crash", "bug",
 }
-NEGATION_WORDS = {"not", "no", "never", "neither", "hardly", "cannot", "can't", "don't", "doesn't", "isn't", "wasn't"}
-INTENSIFIERS = {"very", "really", "extremely", "so", "too", "absolutely"}
+NEGATION_WORDS = {"not", "no", "never", "cannot", "can't", "don't", "doesn't", "isn't"}
+INTENSIFIERS = {"very", "really", "extremely", "too", "absolutely"}
 INTENT_PHRASES = {
     "greeting": {"good morning", "good afternoon", "good evening", "how are you"},
     "farewell": {"see you", "good night", "talk later", "exit chat"},
     "thanks": {"thank you", "thanks a lot", "much appreciated", "that helped"},
-    "troubleshooting": {"not working", "does not work", "doesn't work", "how to fix", "error message", "failed to run"},
+    "troubleshooting": {"not working", "does not work", "how to fix", "error message", "failed to run"},
     "summarization": {"summarize this", "summary of", "in short", "key points"},
     "translation": {"translate to", "translate into", "in english", "in hindi", "meaning of"},
     "recommendation": {"recommend me", "suggest some", "which is best", "best option"},
@@ -74,30 +72,18 @@ INTENT_PHRASES = {
     "help": {"what topics do you know", "what can i ask", "show example questions"},
     "explanation": {"what is", "what are", "how does", "how do", "explain to me", "difference between"},
 }
+# Broad fallback categories only; specific topics are matched by INTENT_PHRASES.
 INTENT_KEYWORDS = {
     "greeting": {"hello", "hi", "hey"},
     "farewell": {"bye", "goodbye", "exit"},
     "thanks": {"thanks", "thank", "appreciate"},
-    "coding_help": {"python", "code", "coding", "program", "bug", "error", "debug", "api", "sql", "java", "database"},
-    "study_help": {"study", "exam", "college", "assignment", "project", "learn", "homework", "syllabus", "lab", "notes"},
-    "troubleshooting": {"fix", "broken", "failed", "issue", "problem", "crash", "error", "wrong", "unable"},
-    "summarization": {"summarize", "summary", "summarise", "shorten", "brief"},
+    "coding_help": {"python", "code", "coding", "program", "bug", "error", "api", "sql", "java"},
+    "study_help": {"study", "exam", "college", "assignment", "project", "learn", "lab", "notes"},
+    "troubleshooting": {"fix", "broken", "failed", "issue", "problem", "crash", "wrong"},
+    "summarization": {"summarize", "summary", "shorten", "brief"},
     "translation": {"translate", "translation", "language", "meaning"},
     "recommendation": {"recommend", "suggest", "choose", "compare", "best"},
-    "python_topic": {"python", "programming", "syntax"},
-    "variables": {"variable", "variables", "assignment", "value"},
-    "loops": {"loop", "loops", "iterate", "while", "range"},
-    "functions": {"function", "functions", "def", "parameter", "return"},
-    "lists": {"list", "lists", "append", "indexing"},
-    "nlp_topic": {"nlp", "natural", "language", "processing"},
-    "tokenization": {"tokenization", "tokenize", "tokens", "token"},
-    "tfidf": {"tfidf", "tf-idf", "frequency", "idf"},
-    "classification": {"classification", "classify", "logistic", "regression", "intent"},
-    "similarity": {"similarity", "cosine", "vectors"},
-    "project": {"campusbot", "architecture", "technologies"},
-    "study_tips": {"studying", "focus", "revision", "exams"},
-    "help": {"help", "topics", "examples", "ask"},
-    "explanation": {"explain", "define", "definition", "meaning", "difference"},
+    "explanation": {"explain", "define", "definition", "difference", "describe"},
 }
 QUESTION_STARTERS = {"who", "what", "when", "where", "why", "how", "which"}
 
