@@ -99,8 +99,12 @@ class NLPChatbot:
         if not cleaned:
             return "Please type a question so I can try to help."
         tag, similarity, _ = self.predict_intent(cleaned)
-        # Threshold prevents unrelated questions from being confidently misclassified.
-        if tag is None or similarity < 0.32:
+        # Require shared topic words as well as vector similarity; common words alone
+        # should not make an unrelated question look like a known intent.
+        stop_words = {"a", "an", "the", "is", "are", "am", "on", "in", "at", "to", "of", "for", "and", "or", "what", "how", "why", "when", "where", "who", "can", "do", "does", "i", "me", "my", "you", "your", "it", "this", "that", "with", "about"}
+        user_terms = set(tokenize(cleaned)) - stop_words
+        has_meaningful_overlap = any(user_terms.intersection(tokenize(pattern)) for pattern in self.patterns)
+        if tag is None or similarity < 0.32 or not has_meaningful_overlap:
             return (
                 "I'm not confident I understood that yet. Try rephrasing your question, "
                 "or add more examples to intents.json so I can learn that topic."
