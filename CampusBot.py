@@ -24,30 +24,82 @@ HISTORY_FILE = Path(__file__).with_name("chat_history.csv")
 HISTORY_FIELDS = ["timestamp", "user", "bot", "nlp_tokens", "nlp_keywords", "nlp_intent", "nlp_question_type", "nlp_sentiment"]
 
 # Lightweight, dependency-free NLP for local message analysis.
+# These constants affect only local analysis/logging, never the AI backend request or GUI.
 NLP_STOP_WORDS = {
-    "a", "an", "the","it", "they", "them", "this", "that", "these", "those", "what", "when",
-    "where", "why", "how", "who", "which", "please", "just", "also", "have","has", "had",
+    "a", "an", "the", "and", "or", "but", "if", "then", "than", "to",
+    "of", "in", "on", "at", "for", "from", "by", "with", "about", "as",
+    "is", "am", "are", "was", "were", "be", "been", "being", "do", "does",
+    "did", "can", "could", "would", "should", "will", "i", "me", "my",
+    "we", "our", "you", "your", "he", "she", "it", "they", "them", "this",
+    "that", "these", "those", "what", "when", "where", "why", "how", "who",
+    "which", "please", "just", "also", "very", "there", "here", "have", "has",
+    "had", "into", "up", "out", "tell", "explain", "give", "make", "want",
+    "need", "like", "us", "yourself", "myself", "their", "its",
 }
 POSITIVE_WORDS = {
-    "good", "great", "happy", "love", "helpful", "thanks", "excellent",
-    "perfect", "clear", "success", "correct", "working",
+    "good", "great", "excellent", "happy", "love", "helpful", "thanks", "thank",
+    "awesome", "nice", "perfect", "amazing", "wonderful", "easy", "clear", "best",
+    "success", "successful", "correct", "working", "improve", "improved",
 }
 NEGATIVE_WORDS = {
-    "bad", "poor", "hate", "broken", "error", "failed", "problem", "issue",
-    "wrong", "terrible", "confusing", "difficult", "slow", "crash", "bug",
+    "bad", "poor", "sad", "angry", "hate", "broken", "error", "failed", "failure",
+    "problem", "issue", "wrong", "terrible", "frustrated", "confusing", "difficult",
+    "hard", "slow", "crash", "crashed", "bug", "useless", "incorrect", "unable",
 }
-NEGATION_WORDS = {"not", "no", "never", "cannot", "can't", "don't", "doesn't", "isn't"}
-INTENSIFIERS = {"very", "really", "extremely", "too", "absolutely"}
+NEGATION_WORDS = {
+    "not", "no", "never", "neither", "hardly", "cannot", "can't", "dont", "don't",
+    "isnt", "isn't", "wasnt", "wasn't", "doesn't", "won't",
+}
+INTENSIFIERS = {"very", "really", "extremely", "so", "too", "absolutely", "super"}
 INTENT_PHRASES = {
     "greeting": {"good morning", "good afternoon", "good evening", "how are you"},
+    "farewell": {"see you", "see you later", "good night", "talk later", "exit chat"},
+    "thanks": {"thank you", "thanks a lot", "much appreciated", "that helped"},
+    "troubleshooting": {"not working", "does not work", "doesn't work", "how to fix", "fix this", "error message", "keep crashing", "failed to run"},
+    "summarization": {"summarize this", "summary of", "in short", "key points"},
+    "translation": {"translate to", "translate into", "in english", "in hindi", "meaning of"},
+    "recommendation": {"recommend me", "suggest some", "which is best", "best option", "what should i choose"},
     "python_topic": {"what is python", "python programming", "why use python"},
-    "variables": {"what is a variable", "python variables", "create a variable"},
+    "variables": {"what is a variable", "python variables", "create a variable", "variable example"},
     "loops": {"what is a loop", "for loop", "while loop", "difference between for and while"},
     "functions": {"what is a function", "define a function", "python def example"},
     "lists": {"what is a list", "python list example", "add an item to a list"},
     "nlp_topic": {"what is nlp", "natural language processing", "nlp full form"},
+    "tokenization": {"what is tokenization", "tokens in nlp", "split text into words"},
+    "tfidf": {"what is tf idf", "what is tf-idf", "explain tfidf", "inverse document frequency"},
+    "classification": {"text classification", "logistic regression", "intent classification"},
+    "similarity": {"cosine similarity", "text similarity"},
+    "project": {"explain this project", "how does campusbot work", "project architecture", "technologies are used"},
+    "study_tips": {"study tips", "prepare for exams", "study better", "focus on studying"},
+    "help": {"what topics do you know", "what can i ask", "show example questions"},
+    "explanation": {"what is", "what are", "how does", "how do", "explain to me", "difference between", "meaning of"},
 }
-QUESTION_STARTERS = {"who", "what", "when", "where", "why", "how", "which"}
+INTENT_KEYWORDS = {
+    "greeting": {"hello", "hi", "hey", "greetings"},
+    "farewell": {"bye", "goodbye", "farewell", "later", "exit"},
+    "thanks": {"thanks", "thank", "appreciate"},
+    "coding_help": {"python", "code", "coding", "program", "bug", "error", "debug", "function", "api", "sql", "html", "javascript", "java", "compile", "exception", "traceback", "database", "query"},
+    "study_help": {"study", "exam", "college", "assignment", "project", "subject", "learn", "homework", "syllabus", "lab", "semester", "definition", "notes"},
+    "troubleshooting": {"fix", "broken", "failed", "failure", "issue", "problem", "crash", "crashed", "error", "wrong", "unable"},
+    "summarization": {"summarize", "summary", "summarise", "summarising", "summarizing", "shorten", "brief", "keypoints"},
+    "translation": {"translate", "translation", "translated", "language", "meaning"},
+    "recommendation": {"recommend", "recommendation", "suggest", "suggestion", "choose", "compare", "best", "options"},
+    "python_topic": {"python", "programming", "automation", "syntax"},
+    "variables": {"variable", "variables", "assignment", "value"},
+    "loops": {"loop", "loops", "iterate", "iteration", "while", "range"},
+    "functions": {"function", "functions", "def", "parameter", "return"},
+    "lists": {"list", "lists", "append", "indexing", "sequence"},
+    "nlp_topic": {"nlp", "natural", "language", "processing"},
+    "tokenization": {"tokenization", "tokenize", "tokens", "token"},
+    "tfidf": {"tfidf", "tf-idf", "frequency", "idf"},
+    "classification": {"classification", "classify", "logistic", "regression", "intent"},
+    "similarity": {"similarity", "cosine", "vectors"},
+    "project": {"campusbot", "architecture", "technologies", "technology"},
+    "study_tips": {"studying", "focus", "revision", "revise", "exams"},
+    "help": {"help", "topics", "examples", "ask"},
+    "explanation": {"explain", "define", "definition", "meaning", "difference", "describe"},
+}
+QUESTION_STARTERS = {"who", "what", "when", "where", "why", "how", "which", "whose", "whom"}
 
 def analyze_text(text: str) -> dict[str, str]:
     """Extract meaningful tokens, key phrases, intent, question type, and sentiment."""
