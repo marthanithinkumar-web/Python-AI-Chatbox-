@@ -275,8 +275,8 @@ def run_gui() -> None:
             )
             self.send_button.pack(side="right", anchor="s")
 
-            controls = tk.Frame(root, bg="#f3f5f9", padx=14, pady=(0, 12))
-            controls.pack(fill="x")
+            controls = tk.Frame(root, bg="#f3f5f9", padx=14, pady=0)
+            controls.pack(fill="x", pady=(0, 12))
             tk.Button(controls, text="Clear conversation", command=self.clear).pack(side="left")
             tk.Button(controls, text="Show saved history", command=self.show_history).pack(side="left", padx=8)
             mode = "Groq AI enabled" if os.getenv("GROQ_API_KEY") else "Local NLP mode (set GROQ_API_KEY for broader answers)"
